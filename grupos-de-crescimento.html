@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grupos de Crescimento — Encontre o seu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{
+    --ink:#0F1F16;
+    --ink-soft:#1B3226;
+    --paper:#F4EFE1;
+    --paper-dim:#EAE3CE;
+    --moss:#5C7A5E;
+    --moss-dim:#3E5A45;
+    --gold:#C69436;
+    --gold-soft:#E3B45C;
+    --line: rgba(15,31,22,0.14);
+    --white: #FFFDF8;
+    --shadow: 0 12px 30px rgba(15,31,22,0.14);
+    --radius: 14px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+    margin:0;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  /* ---------- growth motif (background) ---------- */
+  .growth-bg{
+    position:absolute; inset:0; overflow:hidden; pointer-events:none;
+  }
+  .growth-bg svg{ position:absolute; opacity:0.5; }
+
+  /* ---------- header ---------- */
+  header.hero{
+    position:relative;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 64px 24px 190px;
+    overflow:hidden;
+  }
+  .hero-inner{
+    max-width:880px; margin:0 auto; position:relative; z-index:2;
+  }
+  .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    font-size:12.5px;
+    font-weight:600;
+    color: var(--gold-soft);
+    margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:""; width:26px; height:1px; background: var(--gold-soft); display:inline-block;
+  }
+  header.hero h1{
+    font-size: clamp(34px, 5.4vw, 56px);
+    color: var(--white);
+    line-height:1.04;
+    max-width: 14ch;
+  }
+  header.hero h1 em{
+    font-style:italic; color: var(--gold-soft); font-weight:500;
+  }
+  header.hero p.lead{
+    margin-top:18px;
+    max-width:52ch;
+    font-size:17px;
+    color: rgba(244,239,225,0.82);
+  }
+
+  /* search card floating over hero */
+  .search-card{
+    position:relative; z-index:3;
+    max-width:880px; margin: 34px auto 0;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    display:flex; gap:12px; flex-wrap:wrap;
+    align-items:center;
+  }
+  .search-card input[type="text"]{
+    flex:1 1 260px;
+    border:none; outline:none;
+    font-size:16px;
+    font-family:inherit;
+    background:transparent;
+    padding:10px 4px;
+    color:var(--ink);
+  }
+  .search-card input::placeholder{color:#8b8570;}
+  .search-icon{ opacity:0.55; flex:0 0 auto;}
+  .age-field{
+    display:flex; align-items:center; gap:8px;
+    border-left:1px solid var(--line);
+    padding-left:16px;
+    flex:0 0 auto;
+  }
+  .age-field label{ font-size:13px; color:#5d5a4b; white-space:nowrap;}
+  .age-field input{
+    width:64px; border:1px solid var(--line); border-radius:8px;
+    padding:8px 8px; font-size:15px; font-family:inherit; background:var(--paper);
+  }
+
+  /* wrapper offset to compensate hero overlap */
+  main{
+    max-width:1180px; margin: -140px auto 0; padding: 0 24px 80px;
+    position:relative; z-index:4;
+  }
+
+  .layout{
+    display:grid; grid-template-columns: 272px 1fr; gap:28px; align-items:start;
+    margin-top: 210px;
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; margin-top:190px;}
+  }
+
+  /* ---------- filters panel ---------- */
+  .filters{
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 20px 26px;
+    position:sticky; top:20px;
+  }
+  @media (max-width: 860px){ .filters{ position:static; } }
+
+  .filters h2{
+    font-size:19px; margin-bottom:4px;
+  }
+  .filters .sub{ font-size:13px; color:#726d5c; margin-bottom:18px;}
+
+  .filter-group{ margin-bottom:20px; }
+  .filter-group:last-child{ margin-bottom:0; }
+  .filter-group h3{
+    font-family:'Work Sans', sans-serif;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.09em;
+    color: var(--moss-dim); font-weight:700; margin-bottom:10px;
+  }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    border:1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    font-size:13px;
+    padding:7px 12px;
+    border-radius:999px;
+    cursor:pointer;
+    transition: all .15s ease;
+    user-select:none;
+  }
+  .chip:hover{ border-color: var(--moss); }
+  .chip.active{
+    background: var(--ink-soft);
+    border-color: var(--ink-soft);
+    color: var(--white);
+  }
+  .chip.active.gold{ background:var(--gold); border-color:var(--gold); color:var(--ink);}
+
+  #clear-filters{
+    margin-top:20px;
+    width:100%;
+    background:transparent;
+    border:1px solid var(--line);
+    color:#5d5a4b;
+    padding:10px;
+    border-radius:9px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  #clear-filters:hover{ border-color:var(--moss); color:var(--ink);}
+
+  /* ---------- results ---------- */
+  .results-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:16px; flex-wrap:wrap; gap:8px;
+  }
+  .results-head h2{ font-size:22px; }
+  #count-label{ font-size:13.5px; color:#726d5c; }
+
+  .cards{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap:18px;
+  }
+
+  .card{
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding:20px 20px 18px;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .card:hover{ transform: translateY(-3px); border-color: var(--moss); }
+
+  .card-top{ display:flex; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .card h3{ font-size:19px; line-height:1.2; }
+  .day-badge{
+    flex:0 0 auto;
+    background: var(--paper-dim);
+    color: var(--moss-dim);
+    font-size:12px; font-weight:600;
+    padding:5px 10px; border-radius:8px;
+    white-space:nowrap; height:fit-content;
+  }
+  .card .excerpt{
+    font-size:14px; color:#4b4a3f; margin-bottom:14px;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    flex:1;
+  }
+  .tag-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
+  .tag{
+    font-size:11.5px; padding:4px 9px; border-radius:999px;
+    background: rgba(92,122,94,0.12); color:var(--moss-dim); font-weight:600;
+  }
+  .card-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12.5px; color:#8b8570; border-top:1px solid var(--line); padding-top:12px; margin-top:auto;
+  }
+  .card-foot .leader{ font-weight:600; color:#5d5a4b; }
+  .whatsapp-mini{
+    display:inline-flex; align-items:center; gap:5px;
+    color: var(--moss-dim); font-weight:600; text-decoration:none;
+  }
+
+  .empty-state{
+    text-align:center; padding: 60px 20px; color:#726d5c;
+    background: var(--white); border-radius: var(--radius); box-shadow:var(--shadow);
+  }
+  .empty-state .sprout{ font-size:34px; margin-bottom:12px; display:block;}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background: rgba(15,31,22,0.55);
+    display:none; align-items:flex-start; justify-content:center;
+    padding: 40px 18px; overflow-y:auto; z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background: var(--white); border-radius: 18px; max-width:640px; width:100%;
+    padding: 32px 30px 30px; position:relative; box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+    margin-top: 20px;
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px; background:var(--paper); border:none;
+    width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer; color:var(--ink);
+  }
+  .modal h3{ font-size:26px; margin-bottom:6px; padding-right:30px;}
+  .modal .meta-line{ font-size:13.5px; color:#726d5c; margin-bottom:18px; }
+  .modal .tag-row{ margin-bottom:18px; }
+  .modal .desc{ font-size:15px; color:#3c3b32; white-space:pre-line; margin-bottom:22px; }
+  .modal .info-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:22px;
+    font-size:14px;
+  }
+  .modal .info-grid div span{ display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:#8b8570; margin-bottom:3px;}
+  .modal .contacts{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn-whats{
+    display:inline-flex; align-items:center; gap:8px;
+    background: var(--moss-dim); color:var(--white); text-decoration:none;
+    padding:11px 16px; border-radius:9px; font-size:14px; font-weight:600;
+  }
+  .btn-whats:hover{ background: var(--ink-soft); }
+  .btn-whats.secondary{ background: var(--paper-dim); color:var(--ink); }
+
+  footer{
+    text-align:center; padding: 40px 20px 60px; color:#726d5c; font-size:13px;
+  }
+
+  /* ---------- map ---------- */
+  .map-panel{
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 22px;
+  }
+  .map-panel-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:12px; flex-wrap:wrap; gap:8px;
+  }
+  .map-panel-head h2{ font-size:19px; }
+  .map-status{ font-size:12.5px; color:#8b8570; }
+  #map{
+    width:100%; height:340px; border-radius:10px; overflow:hidden;
+    background: var(--paper-dim);
+  }
+  .map-hint{ font-size:12px; color:#8b8570; margin-top:10px; }
+  .leaflet-popup-content{ font-family:'Work Sans', sans-serif; font-size:13.5px; }
+  .leaflet-popup-content b{ font-family:'Fraunces', serif; font-size:15px; }
+  .popup-link{ display:inline-block; margin-top:6px; color:var(--moss-dim); font-weight:600; text-decoration:underline; cursor:pointer; }
+  .toggle-map-btn{
+    background: transparent; border:1px solid var(--line); color:#5d5a4b;
+    padding:7px 12px; border-radius:8px; font-size:12.5px; cursor:pointer;
+  }
+  .toggle-map-btn:hover{ border-color:var(--moss); color:var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="growth-bg">
+    <svg width="900" height="420" viewBox="0 0 900 420" style="right:-120px; top:-60px;">
+      <path d="M20 400 C 120 380, 160 300, 140 220 C 125 160, 60 140, 40 90" stroke="#C69436" stroke-width="2" fill="none" opacity="0.35"/>
+      <path d="M140 220 C 200 200, 230 160, 210 110" stroke="#C69436" stroke-width="2" fill="none" opacity="0.35"/>
+      <path d="M140 220 C 90 210, 60 240, 30 260" stroke="#C69436" stroke-width="2" fill="none" opacity="0.35"/>
+      <circle cx="40" cy="90" r="5" fill="#E3B45C" opacity="0.5"/>
+      <circle cx="210" cy="110" r="4" fill="#E3B45C" opacity="0.5"/>
+      <circle cx="30" cy="260" r="4" fill="#E3B45C" opacity="0.5"/>
+    </svg>
+  </div>
+  <div class="hero-inner">
+    <div class="eyebrow">Grupos de Crescimento</div>
+    <h1>Cada semana, uma <em>casa aberta</em> para crescer junto.</h1>
+    <p class="lead">47 grupos se reúnem pela cidade — famílias, casais, jovens, mulheres, homens e adolescentes. Filtre por dia, perfil ou idade e encontre o grupo certo para essa fase da sua vida.</p>
+  </div>
+
+  <div class="search-card">
+    <svg class="search-icon" width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0F1F16" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="#0F1F16" stroke-width="2" stroke-linecap="round"/></svg>
+    <input type="text" id="search-input" placeholder="Buscar por nome ou palavra-chave (ex: casais, adolescentes, quinta-feira...)">
+    <div class="age-field">
+      <label for="age-input">Sua idade</label>
+      <input type="number" id="age-input" min="0" max="99" placeholder="—">
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="layout">
+    <aside class="filters">
+      <h2>Filtrar</h2>
+      <div class="sub">Combine os filtros para achar seu grupo.</div>
+
+      <div class="filter-group">
+        <h3>Região / Bairro</h3>
+        <div class="chip-row" id="filter-regiao"></div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Dia da semana</h3>
+        <div class="chip-row" id="filter-dia"></div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Público</h3>
+        <div class="chip-row" id="filter-publico"></div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Estado civil / Família</h3>
+        <div class="chip-row" id="filter-familia"></div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Faixa etária</h3>
+        <div class="chip-row" id="filter-faixa"></div>
+      </div>
+
+      <button id="clear-filters">Limpar todos os filtros</button>
+    </aside>
+
+    <section>
+      <div class="map-panel">
+        <div class="map-panel-head">
+          <h2>Mapa dos grupos</h2>
+          <button class="toggle-map-btn" id="toggle-map">Ocultar mapa</button>
+        </div>
+        <div id="map"></div>
+        <div class="map-hint" id="map-hint">Localizando os grupos no mapa…</div>
+      </div>
+
+      <div class="results-head">
+        <h2>Grupos disponíveis</h2>
+        <span id="count-label"></span>
+      </div>
+      <div class="cards" id="cards-container"></div>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <span class="sprout">🌱</span>
+        Nenhum grupo encontrado com esses filtros.<br>Tente remover algum filtro ou ajustar a busca.
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>Igreja • Grupos de Crescimento — encontre o seu, venha caminhar com a gente.</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+const DATA = [{"id": 30233, "nome": "GC TANGEDORES", "descricao": "GC TANGEDORES | Para gomens e mulheres cujo ministério seja a música ou artes da igreja.\n\nPessoas - cantores, músicos e artistas em geral - que desejam se aproximar mais de Deus, busca por crescimento espiritual, e para se fortalecer na cultura do ministério e adoração.\n\nPropósito de crescer juntos na fé, vivendo a presença de Deus e fortalecendo uns aos outros.\n\nReuniões quinzenais. Para mais informações entre em contato com os líderes.\n\nSerá uma alegria ter você caminhando com a gente.", "endereco": "R. Irineu Lucena, 169 - Mecejana, Boa Vista - RR, 69304-210, Brasil", "dia": "Sábado", "horaInicio": "19:00", "horaFim": "20:30", "categorias": ["Homens", "Mulheres"], "idadeMin": null, "idadeMax": null, "lider": "Jonas Emmanuel Nascimento Rodrigues", "telLider": "5595991527690", "colider": "Daniele Lima de Sousa", "telColider": "5595991424251", "vagas": 15, "totalParticipantes": 2, "bairro": "Mecejana", "geoQuery": "R. Irineu Lucena, 169 - Mecejana, Boa Vista - RR, 69304-210, Brasil"}, {"id": 29595, "nome": "GC RENOVO", "descricao": "GC RENOVO PARA MULHERES DE 25 a 30 ANOS SEM FILHO", "endereco": "", "dia": "Sexta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["25-30 anos", "Mulheres Solteiras", "Sem filhos"], "idadeMin": null, "idadeMax": null, "lider": "Francisca Cleide Sousa da Conceição", "telLider": "", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 1, "bairro": null, "geoQuery": null}, {"id": 29125, "nome": "GC OIKOS (FIRMADOS NA ROCHA)", "descricao": "Um GC para casais recém-casados sem filhos que desejam construir seu lar sobre fundamentos firmes. Vivemos Mateus 7:24-25:\n\n“Todo aquele, pois, que ouve estas minhas palavras e as pratica será comparado a um homem prudente que construiu a sua casa sobre a rocha. Caiu a chuva, transbordaram os rios, sopraram os ventos e bateram com força contra aquela casa, e ela não desabou, porque tinha sido construída sobre a rocha.”\n\nSendo edificados na Palavra para que, independentemente das tempestades, permaneçamos inabaláveis.", "endereco": "", "dia": "Sábado", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Casais", "Jovens", "Sem filhos"], "idadeMin": 25, "idadeMax": 40, "lider": "Bruna Rayla Sousa Silva", "telLider": "5595981183444", "colider": "Pedro Charlison", "telColider": "5595981111953", "vagas": 30, "totalParticipantes": 2, "bairro": null, "geoQuery": null}, {"id": 29124, "nome": "GC PREPARADAS PARA PREPARAR", "descricao": "Um lugar para mulheres solteiras que estão sendo preparadas por Deus para viverem Seu propósito. Firmadas na verdade de que nada pode nos separar do amor de Cristo (Romanos 8:39), caminhamos em crescimento, identidade e propósito.", "endereco": "", "dia": "Sábado", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["25-30 anos", "Mulheres", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 25, "idadeMax": 30, "lider": "Maristela Nunes", "telLider": "5595991310953", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 1, "bairro": null, "geoQuery": null}, {"id": 27796, "nome": "GC CHAMADAS POR ELE", "descricao": "Para mulheres solteiras sem filhos", "endereco": "", "dia": "Sábado", "horaInicio": "18:00", "horaFim": "20:00", "categorias": ["18-24 anos", "Jovens", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Luana Bentes", "telLider": "", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 4, "bairro": null, "geoQuery": null}, {"id": 27730, "nome": "GC ESSÊNCIA", "descricao": "Grupo de crescimento para meninas de 11-14 anos. No nosso grupo o foco é crescer em Jesus juntas sem deixar a essência única de cada filha de Deus ser perdida para o mundo.", "endereco": "", "dia": "Sábado", "horaInicio": "16:00", "horaFim": "17:30", "categorias": ["11-14 anos", "Adolescentes"], "idadeMin": 11, "idadeMax": 14, "lider": "Thalita Oliveira Sena", "telLider": "555595991250989", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 27693, "nome": "GC BETEL", "descricao": "BETEL - no hebraico (Beth-El) significa A CASA DE DEUS. Esse grupo de crescimento foi inspirado com propósito à luz da palavra de maneira mútua transformar a sua família em lar, em abrigo, em Habitação de Deus. Gênesis 28:19 Somos um GC de casais heterossexuais com filhos adolescentes de entre 11 a 14 anos. Aqui, compartilharemos Palavra, oração e comunhão entre os irmãos, para que haja a consolidação do caráter e o caminhar de Cristo em nossas vidas. Temos encontros quinzenais, alternando entre os dias de quinta-feira e sábado com local e horário a combinar. Dúvidas, curiosidades e interesse entrem em contato com os Líderes e já se sintam muito bem acolhidos no GC BETEL - a Casa de Deus.", "endereco": "Av. Uiramutã, 1855 - Dr. Airton Rocha, Boa Vista - RR, 69318-704, Brasil", "dia": "Quinta-feira", "horaInicio": "19:00", "horaFim": "21:00", "categorias": ["Casais", "Com filhos"], "idadeMin": null, "idadeMax": null, "lider": "Aymeê Rodrigues Vasconcelos", "telLider": "5595991736720", "colider": "Bruno dos Santos Barbosa", "telColider": "5595991432801", "vagas": null, "totalParticipantes": 6, "bairro": "Dr. Airton Rocha", "geoQuery": "Av. Uiramutã, 1855 - Dr. Airton Rocha, Boa Vista - RR, 69318-704, Brasil"}, {"id": 27025, "nome": "GC FLORESCER", "descricao": "Florescer é um GC para meninas que desejam estar enraizadas em Cristo, crescendo firmes na fé, sendo transformadas pela graça e aprendendo a frutificar em amor.  Nossos encontros acontecem quinzenalmente, aos sábados, às 17h30, em um ambiente de comunhão, cuidado e aprofundamento na Palavra.  Um espaço preparado para meninas de 18 a 24 anos, solteiras e sem filhos, que desejam florescer no propósito de Deus e caminhar juntas nessa estação da vida.", "endereco": "", "dia": "Sábado", "horaInicio": "17:30", "horaFim": "18:30", "categorias": ["18-24 anos", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Aléxya Christina Firmino Pereira", "telLider": "5595991136401", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 12, "bairro": null, "geoQuery": null}, {"id": 24573, "nome": "GC AKMÁZO", "descricao": "GC AKMÁZO | Mulheres solteiras, entre 25 e 30 anos, sem filhos\n\nNosso propósito é fortalecer a caminhada com Cristo por meio da comunhão, do discipulado e do estudo da Palavra, encorajando cada mulher a viver o tempo e o propósito que Deus preparou para sua vida.\nAKMÁZO é uma palavra de origem grega que significa \"estar no auge\", \"chegar à maturidade\", \"frutificar plenamente\" e \"estar no tempo certo\". Ela representa o florescimento espiritual e a confiança no tempo perfeito de Deus, formando mulheres que permanecem firmes em Cristo e frutificam mesmo em meio aos desafios.\n\n\"Bendito o homem que confia no Senhor, e cuja confiança é o Senhor. Porque será como a árvore plantada junto às águas... No ano da sequidão, não se perturba, nem deixa de dar fruto.\" Jeremias 17:7-8\n\nReuniões quinzenais. Para obter mais informações, entre em contato com a líder.\n\nSerá uma alegria caminhar com você!", "endereco": "", "dia": "Sábado", "horaInicio": "16:30", "horaFim": "18:00", "categorias": ["25-30 anos", "Jovens", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 25, "idadeMax": 30, "lider": "Simone Mota de Lima", "telLider": "5595981074911", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 10, "bairro": null, "geoQuery": null}, {"id": 24555, "nome": "GC PROMESSAS", "descricao": "É com grande alegria que gostaríamos de convidar vocês, casais que estão em um relacionamento abençoado por Deus e que ainda não têm filhos, a fazer parte do nosso Grupo de Crescimento Cristão Promessas. Sabemos que o relacionamento a dois é uma jornada única, cheia de desafios, aprendizados e bênçãos. No Promessa, buscamos fortalecer os laços entre os casais, aprofundar nossa fé em Cristo e edificar relacionamentos saudáveis e cheios do amor de Deus. Juntos, vamos estudar a Palavra, compartilhar experiências, orar uns pelos outros e crescer espiritualmente como casais que refletem o propósito de Deus para o matrimônio. O que esperar no Grupo Promessas? - Estudos bíblicos voltados para o relacionamento conjugal; - Momentos de oração e comunhão; - Troca de experiências e apoio mútuo; - Atividades que fortalecem a intimidade e a união do casal. Um homem sozinho pode ser vencido, mas dois conseguem defender-se. Um cordão de três dobras não se rompe com facilidade (Eclesiastes 4:12)", "endereco": "R. Porto Alegre, 376 - Nova Cidade, Boa Vista - RR, 69316-196, Brasil", "dia": "Sábado", "horaInicio": "18:30", "horaFim": "21:00", "categorias": ["18-24 anos", "Casais", "Jovens", "Sem filhos"], "idadeMin": 18, "idadeMax": 26, "lider": "Ana Vitória Matos", "telLider": "5595991691197", "colider": "Keryson Brendo Matos de Araújo", "telColider": "5595981082535", "vagas": 30, "totalParticipantes": 16, "bairro": "Nova Cidade", "geoQuery": "R. Porto Alegre, 376 - Nova Cidade, Boa Vista - RR, 69316-196, Brasil"}, {"id": 22895, "nome": "GC RECONSTRUÇÃO", "descricao": "Grupo de Crescimento para casais com filhos adolescentes (a partir de 12 anos) e família recomposta. O GC Reconstrução auxilia casais na caminhada a dois, com foco em ensinar famílias recompostas a superar os desafios do dia a dia baseados nos princípios milenares. Lançamos o desafio para você comparecer a nossa próxima reunião e aproximar a sua família em Cristo! ✝️", "endereco": "R. Pedro Rodrigues, 1035 - Mecejana, Boa Vista - RR, 69304-040, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Casais", "Com filhos"], "idadeMin": null, "idadeMax": null, "lider": "Carol Collyer", "telLider": "5595991718912", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 25, "bairro": "Mecejana", "geoQuery": "R. Pedro Rodrigues, 1035 - Mecejana, Boa Vista - RR, 69304-040, Brasil"}, {"id": 22874, "nome": "GC RECOMEÇO", "descricao": "O GC Recomeço é um Grupo de Crescimento Cristão da Igreja do Nazareno criado para casais que desejam renovar sua fé, recomeçar com Deus e crescer espiritualmente ao lado de outras pessoas. ✨  Inspirado em Isaías 43:18-19 – “Eis que faço uma coisa nova...” – o grupo é um lugar onde vidas são restauradas, corações são curados e Deus escreve uma nova história, cheia de propósito.", "endereco": "69312-532, Rua Maria do Carmo Batalha 75 Bairro Centenário, Centenario, Boa Vista, RR, 69312-532, BR, 69312-532, Rua Maria do Carmo Batalha 75 Bairro Centenário, Centenario, Boa Vista, RR, 69312-532, BR", "dia": "Quinta-feira", "horaInicio": "19:00", "horaFim": "20:00", "categorias": ["Casais", "Jovens", "Sem filhos"], "idadeMin": null, "idadeMax": null, "lider": "Fabio Silva De Oliveira", "telLider": "5595981118929", "colider": "Rebeca Albuquerque", "telColider": "5595991186015", "vagas": 15, "totalParticipantes": 12, "bairro": "Centenário", "geoQuery": "69312-532, Rua Maria do Carmo Batalha 75 Bairro Centenário, Centenario, Boa Vista, RR, 69312-532, BR, 69312-532, Rua Maria do Carmo Batalha 75 Bairro Centenário, Centenario, Boa Vista, RR, 69312-532, BR"}, {"id": 22734, "nome": "GC ATOS 29", "descricao": "GC ATOS 29 | para homens de 18-24 anos solteiros sem filhos “E o que você ouviu de mim na presença de muitas testemunhas, isso mesmo transmita a homens fiéis, idôneos para instruir a outros.” ‭‭2Timóteo‬ ‭2‬:‭2‬ ‭  O GC ATOS 29 é um Grupo de Crescimento voltado para jovens homens que estão no início de sua jornada, e desejam fortalecer sua fé, desenvolver caráter, construir amizades verdadeiras e viver uma vida com propósito. Somos um grupo de irmãos que decidiu não viver no piloto automático — mas assumir a missão que Deus nos confiou.  O nome “Atos 29” representa a continuidade da missão. O livro de Atos tem 28 capítulos — nós somos o capítulo que está sendo escrito agora, com nossas escolhas, fé e ações.  Aqui, queremos crescer como discípulos autênticos, aprender a ouvir a voz de Deus, enfrentar nossas lutas com coragem e viver como homens de verdade — firmes na Palavra, cheios do Espírito e comprometidos com a missão.  Encontros quinzenais aos sábados. Para mais informações, entre em contato com o líder.", "endereco": "", "dia": "Sábado", "horaInicio": "18:00", "horaFim": "20:00", "categorias": ["18-24 anos", "Homens", "Homens Solteiros", "Jovens", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Jhonatan Barros", "telLider": "5595984250457", "colider": "Matheus de Souza Gomes", "telColider": "5595991751434", "vagas": 15, "totalParticipantes": 2, "bairro": null, "geoQuery": null}, {"id": 22688, "nome": "GC LILIES", "descricao": "GC LILIES | para mulheres de 25-30 anos solteiras sem filhos \"Olhai os lírios do campo, como eles crescem...\" Mateus 6:28 b O GC LILIES é um Grupo de Crescimento especialmente para mulheres jovens, solteiras, sem filhos, que desejam aprofundar seu relacionamento com Deus, construir amizades saudáveis e crescer juntas em um ambiente leve, acolhedor e seguro. Aqui, queremos aprender a confiar, florescer e viver o propósito de Deus para nós, entendendo que, assim como os lírios, somos cuidadas por Ele em cada detalhe. Encontros quinzenais às quintas-feiras Para mais informações, entre em contato com a líder. Venha fazer parte desse jardim!", "endereco": "", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["25-30 anos", "Jovens", "Mulheres", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 25, "idadeMax": 30, "lider": "Thaís Ferreira", "telLider": "", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 22605, "nome": "GC CONECTADOS COM CRISTO", "descricao": "GC GERAÇÃO ESCOLHIDA", "endereco": "", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["25-30 anos", "Homens Solteiros", "Jovens"], "idadeMin": 25, "idadeMax": 30, "lider": "Dinho Paiva", "telLider": "5595991612533", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 1, "bairro": null, "geoQuery": null}, {"id": 22603, "nome": "GC CASA DE DAVI", "descricao": "GC casa de Davi para homens solteiros sem filhos.", "endereco": "Parque Anauá - Dos Estados, Boa Vista - RR, 69305-150, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["25-30 anos", "Homens Solteiros", "Jovens", "Sem filhos"], "idadeMin": 25, "idadeMax": 30, "lider": "Hiago Rocha", "telLider": "5595981047121", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 12, "bairro": "Dos Estados", "geoQuery": "Parque Anauá - Dos Estados, Boa Vista - RR, 69305-150, Brasil"}, {"id": 22600, "nome": "GC BEZALEL", "descricao": "GC para meninos de 15 a 17 anos. Para mais informações entre em contato com o líder.", "endereco": "", "dia": "Domingo", "horaInicio": "00:00", "horaFim": "00:00", "categorias": ["15-17 anos", "Jovens", "Jovens Rapazes", "Sem filhos"], "idadeMin": 15, "idadeMax": 17, "lider": "Neto Sindeaux", "telLider": "5595991355256", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 1, "bairro": null, "geoQuery": null}, {"id": 22599, "nome": "GC MULHERES DE FÉ", "descricao": "Grupo de Crescimento para mulheres casadas onde o marido não frequenta igreja. Líder Zenaide Para saber informações mais precisas das reuniões entrar em contato com a Líder.", "endereco": "R. Caribe - São Vicente, Boa Vista - RR, 69303-420, Brasil", "dia": "Quinta-feira", "horaInicio": "20:00", "horaFim": "21:30", "categorias": [">30", "Mães", "Mulheres", "Mulheres Casadas"], "idadeMin": null, "idadeMax": null, "lider": "Zenaide Peres", "telLider": "5595991352988", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 9, "bairro": "São Vicente", "geoQuery": "R. Caribe - São Vicente, Boa Vista - RR, 69303-420, Brasil"}, {"id": 22597, "nome": "GC HADASSA", "descricao": "Grupo de crescimento para mulheres solteiras de 30 a 40 anos sem filhos. Líder Natacha.  Encontros quinzenais. Para saber o local entre em contato com a líder.", "endereco": "Rua Lobo D'Almada, 181, apto 102, Sao Francisco, Boa Vista, RR, 69305-050, BR", "dia": "Terça-feira", "horaInicio": "18:45", "horaFim": "19:45", "categorias": [">30", "Jovens", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 30, "idadeMax": null, "lider": "Natacha Boaes", "telLider": "555595981080816", "colider": "", "telColider": "", "vagas": 9, "totalParticipantes": 10, "bairro": "São Francisco", "geoQuery": "Rua Lobo D'Almada, 181, apto 102, Sao Francisco, Boa Vista, RR, 69305-050, BR"}, {"id": 22563, "nome": "GC YESHUA", "descricao": "Um grupo de crescimento criado para meninas de 15 a 17 anos que desejam conhecer mais profundamente o amor de Jesus. Aqui, somos abraçadas por sua presença, fortalecidas pela palavra e inspiradas a viver uma fé real, leve e transformadora. Compartilhamos momentos sinceros, crescemos juntas e aprendemos a caminhar com um coração totalmente entregue a Ele.  Um espaço seguro para ser ouvida, cuidada e guiada por Jesus.", "endereco": "", "dia": "Sábado", "horaInicio": "17:00", "horaFim": "19:00", "categorias": ["15-17 anos", "Jovens", "Jovens Meninas", "Sem filhos"], "idadeMin": 15, "idadeMax": 17, "lider": "Inaê Sindeaux", "telLider": "5595981146273", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 5, "bairro": null, "geoQuery": null}, {"id": 22543, "nome": "GC REDES", "descricao": "Grupo de Crescimento para meninas solteiras, sem filhos, de 18 a 24 anos. Líder Alejandra.  Alcançadas pela graça de Jesus e atendendo ao Seu chamado, largamos as redes do mundo e rendemos os nossos corações às redes do Reino dos céus, tornando-nos discípulas de Cristo. Agora, estendemos as redes para que outras vidas sejam alcançadas e participem dessa graça transformadora.  Conectadas pela fé, guiadas por Jesus.  Mateus 4:18-22 Mateus 13:47-50", "endereco": "Parque Anauá - Dos Estados, Boa Vista - RR, 69305-150, Brasil", "dia": "Sábado", "horaInicio": "18:00", "horaFim": "20:00", "categorias": ["18-24 anos", "Jovens", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Maryalejandra Plaz", "telLider": "5595984238574", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 11, "bairro": "Dos Estados", "geoQuery": "Parque Anauá - Dos Estados, Boa Vista - RR, 69305-150, Brasil"}, {"id": 22190, "nome": "GC SOBRE A ROCHA", "descricao": "GC SOBRE A ROCHA | para casais com filhos de 8 a 12 anos Líderes: Rony e Gisele Sobre a Rocha é um grupo de crescimento fundamentado na Palavra de Deus, onde buscamos edificar nossas vidas e famílias em Jesus Cristo, a Rocha inabalável. Cremos que, mesmo diante das tempestades, permanecemos firmes quando nossos alicerces estão Nele. Nosso propósito é crescer juntos em fé, comunhão e propósito, sendo fortalecidos pela Palavra e guiados pelo Espírito Santo. “Portanto, quem ouve estas minhas palavras e as pratica é como um homem prudente que construiu a sua casa sobre a rocha.” Mateus 7:24 Venha crescer conosco, construir novas histórias e viver o propósito que Deus sonhou para a sua família!", "endereco": "Av. Benjamin Constant, 539 - São Pedro, Boa Vista - RR, 69306-695, Brasil", "dia": "Sábado", "horaInicio": "17:00", "horaFim": "18:30", "categorias": ["Casais", "Com filhos", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Gisele Faust", "telLider": "5595991236959", "colider": "Rony Benjamin", "telColider": "5595991570795", "vagas": null, "totalParticipantes": 12, "bairro": "São Pedro", "geoQuery": "Av. Benjamin Constant, 539 - São Pedro, Boa Vista - RR, 69306-695, Brasil"}, {"id": 22188, "nome": "GC À MESA", "descricao": "GC À MESA | Casais casados com filhos pequenos, especialmente entre 5 e 10 anos.\n\nNosso propósito é proporcionar momentos de crescimento espiritual, amizade e apoio mútuo, onde toda a família participa ativamente — adultos e crianças.\n\nSabemos que cada família tem sua particularidade, por isso aceitamos exceções, como casais que têm um filho dentro da faixa etária e outro um pouco mais velho. O importante para nós é a unidade familiar e o desejo sincero de crescer juntos em Cristo. Aqui, há espaço para a Palavra, a oração, a mesa compartilhada e as boas risadas das crianças — criando memórias afetivas, espirituais e amizades duradouras.\n\nReuniões quinzenais, as quintas-feiras e sábados intercalando entre esses dias.\n\nPara mais informações entre em contato com os líderes: Jhileade Gomes & Carol Sá (95) 99145-7910\n\nSerá uma alegria receber sua família para caminhar conosco.", "endereco": "", "dia": "Quinta-feira", "horaInicio": "17:30", "horaFim": "19:00", "categorias": ["Casais", "Com filhos", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Jhileade Gomes & Carol Sá", "telLider": "5595981133790", "colider": "", "telColider": "", "vagas": 30, "totalParticipantes": 25, "bairro": null, "geoQuery": null}, {"id": 21928, "nome": "GC AFAGO", "descricao": "GC AFAGO | Mães solteiras, entre 30 e 45 anos, com filhos adolescentes ou jovens.\n\nNosso propósito é oferecer um ambiente de acolhimento, comunhão e fortalecimento espiritual, onde cada mulher possa compartilhar sua caminhada, crescer na fé e encontrar apoio em Deus, crescer na Sua Palavra e caminhar ao lado de outras mães que compartilham desafios e experiências semelhantes.\n\nReuniões quinzenais aos sábados.\n\nPara mais informações entre em contato com a líder.\n\nSerá uma alegria caminhar com você.", "endereco": "472 - R. da Tangerineira, 440 - Caçari, Boa Vista - RR, 69307-550, Brasil", "dia": "Sábado", "horaInicio": "17:30", "horaFim": "19:00", "categorias": ["Com filhos", "Mães", "Mulheres", "Mulheres Solteiras"], "idadeMin": 30, "idadeMax": 45, "lider": "Edivania Oliveira Feitosa", "telLider": "5595991404317", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 15, "bairro": "Caçari", "geoQuery": "472 - R. da Tangerineira, 440 - Caçari, Boa Vista - RR, 69307-550, Brasil"}, {"id": 21613, "nome": "GC ESCOLHIDAS", "descricao": "Grupo de crescimento para meninas de 15 a 17 anos. Líderes Vitória Albuquerque e Giovanna Gaspar. Somos escolhidas por Deus, meninas especiais, chamadas para viver um propósito maior, de acordo com a luz de Cristo e para anunciar as virtudes do Seu amor e poder. Isso significa que temos o privilégio e a responsabilidade de representar Deus onde estivermos. Como nação santa, fomos separadas para viver e afirmar o valor do propósito divino. 1 Pedro 2:9 – \"Mas vós sois a geração eleita, o sacerdócio real, a nação santa, o povo adquirido, para que anuncieis as virtudes daquele que vos chamou das trevas para a sua maravilhosa luz.\" Encontros quinzenais. Para saber o local entre em contato com as líderes.", "endereco": "", "dia": "Sábado", "horaInicio": "16:00", "horaFim": "17:00", "categorias": ["15-17 anos", "Jovens", "Jovens Meninas", "Sem filhos"], "idadeMin": 15, "idadeMax": 17, "lider": "Vitoria Albuquerque Alves Sousa", "telLider": "5595991207816", "colider": "Giovanna Gaspar", "telColider": "5595991463910", "vagas": 15, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 21612, "nome": "GC ALIANÇA", "descricao": "Grupo de crescimento para casais com filhos adolescentes. Líderes Lidianne e Fabinho  Encontros quinzenais. Para saber o local entre em contato com os líderes", "endereco": "Rua Detson Mendes, 1189, Jardim Floresta, Boa Vista, RR, 69312-035, BR", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:30", "categorias": ["Casais", "Com filhos"], "idadeMin": null, "idadeMax": null, "lider": "Lidianne Rebouças Evangelista", "telLider": "5592974007456", "colider": "Fabio Santos", "telColider": "5521982428513", "vagas": null, "totalParticipantes": 34, "bairro": "Jardim Floresta", "geoQuery": "Rua Detson Mendes, 1189, Jardim Floresta, Boa Vista, RR, 69312-035, BR"}, {"id": 21610, "nome": "GC ZION", "descricao": "Grupo de crecsimento para jovens casados sem filhos. Líderes Millena e Hélio  “Os que confiam no Senhor são como o monte de Sião, que não se abala, mas permanece para sempre. Salmos 125:1”  Te convidamos para um tempo de imersão no conhecimento de Deus, através da comunhão uns com os outros e da leitura da palavra de Deus. É hora de conhecer e fazê-lo conhecido até que Ele venha.  Encontros quinzenais. Para saber o local entre em contato com os líderes", "endereco": "", "dia": "Sábado", "horaInicio": "19:00", "horaFim": "21:00", "categorias": ["Casais", "Jovens"], "idadeMin": null, "idadeMax": null, "lider": "Millena Menezes", "telLider": "5595981077279", "colider": "Helio Augusto", "telColider": "5595991442132", "vagas": null, "totalParticipantes": 21, "bairro": null, "geoQuery": null}, {"id": 21371, "nome": "GC EKBALLO", "descricao": "Grupo de crescimento para meninos de 15 a 17 anos. Líder Lucas Jesus Mateus 9:38 Rogai, pois, ao Senhor da seara que mande (Ekballo) trabalhadores para a sua seara. Marcos 1:12 E logo o Espírito o impeliu (Ekballo) para o deserto. Nosso GC se chama Ekballo porque acreditamos que fomos chamados para algo maior do que apenas viver para nós mesmos. A palavra Ekballo vem do grego, e significa \"lançar para fora\", \"vá sem direito de retorno\" seremos jovens que não ficam parados, e são movidos por Deus, para crescer espiritualmente e impactar aqueles que estiverem ao redor, seremos enviados para transformar essa geração. Encontros quinzenais. Para saber o local entre em contato com o líder.", "endereco": "R. Eduardo Ribeiro, 393 - São Francisco, Boa Vista - RR, 69305-140, Brasil", "dia": "Sábado", "horaInicio": "16:00", "horaFim": "18:00", "categorias": ["15-17 anos", "Jovens Rapazes", "Sem filhos"], "idadeMin": 15, "idadeMax": 17, "lider": "Lucas Gabriel assunção de jesus", "telLider": "5595981143444", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 2, "bairro": "São Francisco", "geoQuery": "R. Eduardo Ribeiro, 393 - São Francisco, Boa Vista - RR, 69305-140, Brasil"}, {"id": 21370, "nome": "GC FILHAS DA PROMESSA", "descricao": "Grupo de crescimento para mulheres solteiras sem filhos, de 18-24 anos. Líder Yasmin Gouveia.  Somos mulheres que acreditam na fidelidade de Deus e no poder das Suas promessas. Baseadas em Lucas 1:37 — “Porque para com Deus não haverá impossíveis em todas as suas promessas” —, vivemos na certeza de que o Senhor tem algo novo e transformador para nossas vidas.  Em cada encontro, buscamos fortalecer nossa fé, apoiar umas às outras e compartilhar experiências que edificam e inspiram. Sabemos que, mesmo diante dos desafios, o Deus que prometeu é fiel para cumprir.  Encontros quinzenais. Para saber o local entrar em contato com a líder.", "endereco": "", "dia": "Sábado", "horaInicio": "17:00", "horaFim": "19:00", "categorias": ["18-24 anos", "Jovens", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Yasmin Gouveia", "telLider": "5595981093456", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 19200, "nome": "GC MULHERES SELADAS", "descricao": "Grupo de crescimento para mulheres solteiras acima de 40 anos com filhos. Líder ANTONIA BEZERRA GC MULHERES SELADAS, está aqui pra te ajudar a entender que você é filha amada, escolhida e selada. Que existe um selo em você, que o Seu Pai fez e juntas iremos cada vez mais descobrir e caminhar naquilo que o Senhor tem. Encontros quinzenais, para saber o local entre em contato com a líder.", "endereco": "", "dia": "Quinta-feira", "horaInicio": "19:00", "horaFim": "20:30", "categorias": [">40", "Com filhos", "Mulheres Solteiras"], "idadeMin": 40, "idadeMax": null, "lider": "Antônia Silva Bezerra", "telLider": "5595991751390", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 10, "bairro": null, "geoQuery": null}, {"id": 19199, "nome": "GC AURORA", "descricao": "Grupo de crescimento para jovens solteiras de 18 a 24 anos, sem filhos. Líder Larissa.  Aurora é um símbolo do nascer do sol, da luz vencendo a escuridão e de um novo começo.  Encontros quinzenais, para saber o local entre em contato com a líder", "endereco": "", "dia": "Sábado", "horaInicio": "19:00", "horaFim": "21:00", "categorias": ["18-24 anos", "Jovens", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 18, "idadeMax": 24, "lider": "Larissa Lannary", "telLider": "5595991539266", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 6, "bairro": null, "geoQuery": null}, {"id": 16575, "nome": "GC FORTE E CORAJOSA", "descricao": "Grupo de crescimento para mães (25-35 anos) solteiras com filhos de 3 até 10 anos. Líder Melisse. Encontros quinzenais. Para saber o local entre em contato com a líder", "endereco": "472 - R. da Tangerineira, 440 - Caçari, Boa Vista - RR, 69307-550, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Com filhos", "Jovens", "Mães", "Mulheres Solteiras"], "idadeMin": 25, "idadeMax": 35, "lider": "Wigna Melisse Muniz Viana", "telLider": "5595981101296", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 11, "bairro": "Caçari", "geoQuery": "472 - R. da Tangerineira, 440 - Caçari, Boa Vista - RR, 69307-550, Brasil"}, {"id": 16573, "nome": "GC ÁGAPE", "descricao": "GC ÁGAPE | Casais de famílias recompostas com filhos acima de 14 anos\n\nNosso propósito é fortalecer os lares por meio da comunhão, da Palavra de Deus e do amor ÁGAPE - o amor incondicional, sacrificial e generoso que recebemos de Cristo e somos chamados a viver diariamente.\n\nCremos que o amor ágape é mais do que um sentimento: é uma decisão de obedecer a Deus e refletir Seu caráter em nossa família. Juntos, buscamos crescer espiritualmente, construir relacionamentos saudáveis e viver os princípios do Reino em nosso lar.\n\nReuniões quinzenais. Para obter mais informações entre em contato com os líderes.\n\nSerá uma alegria receber vocês para caminharmos juntos em Cristo.", "endereco": "", "dia": "Sábado", "horaInicio": "19:00", "horaFim": "20:30", "categorias": ["Casais", "Com filhos", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Adelia Cristina Vale", "telLider": "5595991755129", "colider": "Bruno João Silva da Cunha", "telColider": "5595991536877", "vagas": 31, "totalParticipantes": 2, "bairro": null, "geoQuery": null}, {"id": 14527, "nome": "GC ÁGUIAS", "descricao": "GC ÁGUIAS | Mulheres solteiras, entre 30 e 40 anos, sem filhos\n\nNosso propósito é fortalecer a caminhada com Cristo por meio da comunhão, do estudo da Palavra e dos discipulado, encorajando cada mulher a viver plenamente o propósito que Deus tem para sua vida.\n\nReuniões quinzenais. Para obter mais informações entre em contato com a líder.\n\nSerá uma alegria caminhar com você!", "endereco": "", "dia": "Sábado", "horaInicio": "19:00", "horaFim": "21:00", "categorias": [">30", "Mulheres Solteiras", "Sem filhos"], "idadeMin": 30, "idadeMax": 40, "lider": "Tatiane Vieira", "telLider": "5595981152127", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 16, "bairro": null, "geoQuery": null}, {"id": 13815, "nome": "GC BLESS", "descricao": "Grupo de crescimento para jovens casais até 35 anos. Encontros quinzenais.", "endereco": "Rua Jandyra Lago, 1020, Buritis, Boa Vista, RR, 69309-004, BR", "dia": "Quinta-feira", "horaInicio": "17:30", "horaFim": "19:00", "categorias": ["Até 35 anos", "Casais", "Jovens", "Sem filhos"], "idadeMin": null, "idadeMax": 35, "lider": "Iasmilly Oliveira Ribeiro", "telLider": "5595991523657", "colider": "Ewerton Pereira", "telColider": "", "vagas": null, "totalParticipantes": 13, "bairro": "Buritis", "geoQuery": "Rua Jandyra Lago, 1020, Buritis, Boa Vista, RR, 69309-004, BR"}, {"id": 12334, "nome": "GC LAR COM PROPÓSITO", "descricao": "Grupo de crescimento para casais com bebê e /ou grávidos. Líderes Eliude e Douglas Encontros quinzenais.", "endereco": "R. 09 de Julho, 101 - São Francisco, Boa Vista - RR, 69305-030, Brasil", "dia": "Sábado", "horaInicio": "17:00", "horaFim": "18:30", "categorias": ["Casais", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Eliude Martins", "telLider": "5595991220652", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 19, "bairro": "São Francisco", "geoQuery": "R. 09 de Julho, 101 - São Francisco, Boa Vista - RR, 69305-030, Brasil"}, {"id": 10046, "nome": "GC LIBERTOS EM CRISTO", "descricao": "Você, adolescente de 11-14 anos, te convido pro GC LIBERTOS EM CRISTO.   Somos adolescentes apaixonados por Jesus, que entendemos que a verdadeira liberdade não está nas coisas desse mundo, mas sim naquele que nos libertou! Somos felizes e apaixonados na presença de Jesus. Venha participar do nosso GC para buscarmos juntos e aprendermos mais e mais sobre o amor que preenche todo vazio!  Encontro quinzenais aos sábados, 15:30. Para saber o local, entrar em contato com o líder, Pedro Elias", "endereco": "", "dia": "Sábado", "horaInicio": "15:30", "horaFim": "17:00", "categorias": ["11-14 anos", "Jovens Rapazes"], "idadeMin": 11, "idadeMax": 14, "lider": "Pedro Elias", "telLider": "5595991649777", "colider": "Abner Calebe Carneiro Prata", "telColider": "5595991236772", "vagas": 15, "totalParticipantes": 2, "bairro": null, "geoQuery": null}, {"id": 9873, "nome": "GC DAS QUEBRANTADAS", "descricao": "Grupo de crescimento para meninas de 11 a 14 anos. Líder: Sara. Reuniões feitas de 15 em 15 dias.  “vocês me procurarão e me acharão quando me buscarem de todo o seu coração”   jeremias 29:13", "endereco": "", "dia": "Sábado", "horaInicio": "16:00", "horaFim": "18:30", "categorias": ["11-14 anos", "Jovens Meninas"], "idadeMin": 11, "idadeMax": 14, "lider": "sara montenegro", "telLider": "5584981807043", "colider": "Nicolly Vivian", "telColider": "5595991581242", "vagas": 15, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 9843, "nome": "GC HOMENS COM PROPÓSITO", "descricao": "Grupo de crescimento para homens solteiros acima de 40 anos. Líder André Marques", "endereco": "R. Aruaque, 343 - São Francisco, Boa Vista - RR, 69306-300, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": [">30", "Homens", "Homens Solteiros"], "idadeMin": 40, "idadeMax": 50, "lider": "André Marques Marques", "telLider": "5595984158095", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 12, "bairro": "São Francisco", "geoQuery": "R. Aruaque, 343 - São Francisco, Boa Vista - RR, 69306-300, Brasil"}, {"id": 9835, "nome": "GC MULHERES TRANSFORMADAS", "descricao": "Grupo de crescimento para mães solteiras. Líder Luciane  Um grupo de jovens mulheres com o desafio de serem mães solteiras, criarem e educarem seus filhos a luz da palavra de Deus. Cremos que Deus restaura e restitui os sonhos por isso escolhemos permanecer firmes e fiéis a ele.  Reuniões feitas quinzenalmente. Para saber o local entre em contato com a líder.", "endereco": "", "dia": "Quinta-feira", "horaInicio": "17:30", "horaFim": "19:00", "categorias": ["Mães", "Mulheres Solteiras"], "idadeMin": null, "idadeMax": null, "lider": "Luciane De Sousa Ramos", "telLider": "5595999675131", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 16, "bairro": null, "geoQuery": null}, {"id": 9825, "nome": "GC FILHAS", "descricao": "GC FILHAS | Meninas de 15 a 17 anos, solteiras e sem fillho.\n\nSomos um GC para meninas que desejam crescer em seu relacionamento com Deus, viver em comunhão com nosso Senhor e aprofundar-se na Sua Palavra.\n\nReuniões quinzenais aos sábados, antes do culto da JNI. Após o GC, participamos juntas do culto de jovens.\n\nPara saber o local entre em contato com a líder.\n\nVocê será muito bem-vinda.", "endereco": "", "dia": "Sábado", "horaInicio": "16:30", "horaFim": "17:30", "categorias": ["15-17 anos", "Jovens Meninas"], "idadeMin": 15, "idadeMax": 17, "lider": "Hannah Júlia Souza de Almeida", "telLider": "5595984389779", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 8, "bairro": null, "geoQuery": null}, {"id": 9819, "nome": "GC CDS", "descricao": "Grupo de crescimento para jovens meninas de 11 a 14 anos. Líder Maria Paiva. Somos jovens meninas, levantadas por Deus com a mesma visão. Cremos no nosso propósito e que estamos sendo preparadas por Ele para sermos: A G E R A Ç Ã O E L E I T A. Reuniões aos sábados, quinzenalmente. Para saber o local entre em contato com a Líder.", "endereco": "", "dia": "Sábado", "horaInicio": "15:30", "horaFim": "17:00", "categorias": ["11-14 anos", "Jovens Meninas"], "idadeMin": 11, "idadeMax": 14, "lider": "Maria Clara Oliveira Paiva", "telLider": "5595991452898", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 2, "bairro": null, "geoQuery": null}, {"id": 9818, "nome": "GC OSTRA", "descricao": "Grupo de Crescimento para mulheres casadas onde o marido não frequenta igreja.  Líder Marcia Larissa  Somos Mulheres unidas pelo mesmo propósito. Somos Ostras produzindo suas pérolas. Somos mulheres alinhando seus lares a perfeita vontade do pai.   Reunião às quintas-feiras, QUINZENALMENTE.  Para saber informações mais precisas das reuniões entrar em contato com a Líder.", "endereco": "R. Rocilda Moura, 552 - Paraviana, Boa Vista - RR, 69307-777, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Mulheres", "Mulheres Casadas"], "idadeMin": null, "idadeMax": null, "lider": "Marcia Larissa", "telLider": "5595991475995", "colider": "", "telColider": "", "vagas": 15, "totalParticipantes": 1, "bairro": "Paraviana", "geoQuery": "R. Rocilda Moura, 552 - Paraviana, Boa Vista - RR, 69307-777, Brasil"}, {"id": 9816, "nome": "GC OHANA", "descricao": "Grupo de crescimento para casais com filhos", "endereco": "R. Raimundo da Silva Bríglia, 1030 - casa 7 - Centenário, Boa Vista - RR, 69312-525, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Casais", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Karoline Nascimento", "telLider": "5595991738627", "colider": "Lucas Anderson Nascimento", "telColider": "5592991776046", "vagas": null, "totalParticipantes": 6, "bairro": "Centenário", "geoQuery": "R. Raimundo da Silva Bríglia, 1030 - casa 7 - Centenário, Boa Vista - RR, 69312-525, Brasil"}, {"id": 9815, "nome": "GC FAMÍLIAS ABENÇOADOS", "descricao": "Grupo de crescimento para casais grávidos ou com bebes de colo", "endereco": "R. Doná Clô, 215 - Aparecida, Boa Vista - RR, 69306-220, Brasil", "dia": "Sábado", "horaInicio": "16:00", "horaFim": "18:00", "categorias": ["Casais", "Com filhos", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Leonardo Catão Pereira", "telLider": "5595981139418", "colider": "Flavia Catao", "telColider": "5595981139421", "vagas": 15, "totalParticipantes": 15, "bairro": "Aparecida", "geoQuery": "R. Doná Clô, 215 - Aparecida, Boa Vista - RR, 69306-220, Brasil"}, {"id": 9814, "nome": "GC KAIRÓS", "descricao": "Grupo de Crescimento para homens de 30 a 35 anos, com ou sem filhos. Lider: Pedro Charlison  Kairós significa tempo oportuno de Deus.   Assim como Davi, queremos viver o chamado de Deus nesse tempo.  \"Tenham cuidado com a sua maneira de viver: que não seja como insensatos, mas como sábios, aproveitando ao máximo cada oportunidade\" Efésios 5:15;16  Reuniões Quinzenalmente. Para saber o local entre em contato com o líder.", "endereco": "", "dia": "Sábado", "horaInicio": "19:30", "horaFim": "21:00", "categorias": [">30", "Homens"], "idadeMin": 30, "idadeMax": 35, "lider": "Pedro Charlison", "telLider": "5595981111953", "colider": "", "telColider": "", "vagas": null, "totalParticipantes": 1, "bairro": null, "geoQuery": null}, {"id": 9812, "nome": "GC ARCA", "descricao": "Grupo de Crescimento  de Casais C&V Camilo e Vanisia", "endereco": "TV. Francisco Saldanha, 39 - Aparecida, Boa Vista - RR, 69306-398, Brasil", "dia": "Quinta-feira", "horaInicio": "19:30", "horaFim": "21:00", "categorias": ["Casais", "Família"], "idadeMin": null, "idadeMax": null, "lider": "Vanisia Camilo", "telLider": "5595991527591", "colider": "Nelson Luiz Camilo Oliveira", "telColider": "5595981190542", "vagas": null, "totalParticipantes": 29, "bairro": "Aparecida", "geoQuery": "TV. Francisco Saldanha, 39 - Aparecida, Boa Vista - RR, 69306-398, Brasil"}];
+// ---- category taxonomy for filter panel ----
+const FAIXA_CATS = ["11-14 anos","15-17 anos","18-24 anos","25-30 anos","Até 35 anos",">30",">40"];
+const FAMILIA_CATS = ["Casais","Com filhos","Sem filhos","Família","Mulheres Casadas","Mulheres Solteiras","Homens Solteiros","Mães"];
+const PUBLICO_CATS = ["Homens","Mulheres","Jovens","Adolescentes","Jovens Meninas","Jovens Rapazes"];
+
+const state = {
+  search: "",
+  age: null,
+  dias: new Set(),
+  publico: new Set(),
+  familia: new Set(),
+  faixa: new Set(),
+  regiao: new Set(),
+};
+
+function uniqueDias(){
+  const set = new Set(DATA.map(g => g.dia).filter(Boolean));
+  const order = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+  return order.filter(d => set.has(d));
+}
+
+function buildChips(containerId, values, stateSet, goldStyle){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  values.forEach(val => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip" + (goldStyle ? " gold-candidate" : "");
+    chip.textContent = val;
+    chip.dataset.value = val;
+    chip.addEventListener("click", () => {
+      if(stateSet.has(val)){ stateSet.delete(val); chip.classList.remove("active","gold"); }
+      else { stateSet.add(val); chip.classList.add("active"); if(goldStyle) chip.classList.add("gold"); }
+      render();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function matchesAge(group, age){
+  if(age === null || isNaN(age)) return true;
+  const min = group.idadeMin, max = group.idadeMax;
+  if(min === null && max === null) return true;
+  if(min !== null && age < min) return false;
+  if(max !== null && age > max) return false;
+  return true;
+}
+
+function groupCats(g){ return new Set(g.categorias); }
+
+function filterData(){
+  const q = state.search.trim().toLowerCase();
+  return DATA.filter(g => {
+    if(state.dias.size && !state.dias.has(g.dia)) return false;
+    if(state.regiao.size && !(g.bairro && state.regiao.has(g.bairro))) return false;
+    const cats = groupCats(g);
+    for(const c of state.publico){ if(!cats.has(c)) return false; }
+    for(const c of state.familia){ if(!cats.has(c)) return false; }
+    for(const c of state.faixa){ if(!cats.has(c)) return false; }
+    if(!matchesAge(g, state.age)) return false;
+    if(q){
+      const hay = (g.nome + " " + g.descricao + " " + g.categorias.join(" ") + " " + g.dia + " " + (g.bairro||"")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function excerpt(text, len){
+  const clean = text.replace(/\s+/g," ").trim();
+  return clean.length > len ? clean.slice(0,len).trim() + "…" : clean;
+}
+
+function whatsLink(phone, nome){
+  if(!phone) return null;
+  const msg = encodeURIComponent(`Olá! Vi o ${nome} na página de Grupos de Crescimento e gostaria de mais informações.`);
+  return `https://wa.me/${phone}?text=${msg}`;
+}
+
+function renderCard(g){
+  const card = document.createElement("div");
+  card.className = "card";
+  const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.dia} · ${g.horaInicio}` : g.dia;
+  const tags = g.categorias.slice(0,3).map(c => `<span class="tag">${c}</span>`).join("");
+  card.innerHTML = `
+    <div class="card-top">
+      <h3>${g.nome}</h3>
+      <span class="day-badge">${timeStr}</span>
+    </div>
+    <div class="excerpt">${excerpt(g.descricao || "Grupo de Crescimento — entre em contato para saber mais.", 150)}</div>
+    <div class="tag-row">${tags}</div>
+    <div class="card-foot">
+      <span class="leader">${g.lider || "—"}${g.bairro ? " · " + g.bairro : ""}</span>
+      <span>Ver detalhes →</span>
+    </div>
+  `;
+  card.addEventListener("click", () => openModal(g));
+  return card;
+}
+
+function render(){
+  const filtered = filterData();
+  const container = document.getElementById("cards-container");
+  const empty = document.getElementById("empty-state");
+  container.innerHTML = "";
+  document.getElementById("count-label").textContent = `${filtered.length} de ${DATA.length} grupos`;
+  if(filtered.length === 0){
+    empty.style.display = "block";
+  } else {
+    empty.style.display = "none";
+    filtered.forEach(g => container.appendChild(renderCard(g)));
+  }
+  updateMapMarkers(filtered);
+}
+
+function openModal(g){
+  const overlay = document.getElementById("overlay");
+  const modal = document.getElementById("modal-content");
+  const tags = g.categorias.map(c => `<span class="tag">${c}</span>`).join("");
+  const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.horaInicio} às ${g.horaFim}` : "Horário a combinar";
+  const idadeStr = (g.idadeMin || g.idadeMax) ? `${g.idadeMin ?? "livre"}${g.idadeMax ? " a " + g.idadeMax : "+"} anos` : "Todas as idades";
+  const liderLink = whatsLink(g.telLider, g.nome);
+  const coliderLink = whatsLink(g.telColider, g.nome);
+
+  modal.innerHTML = `
+    <button class="modal-close" id="modal-close">✕</button>
+    <h3>${g.nome}</h3>
+    <div class="meta-line">${g.dia} · ${timeStr}</div>
+    <div class="tag-row">${tags}</div>
+    <div class="desc">${g.descricao || "Entre em contato com a liderança para mais informações sobre este grupo."}</div>
+    <div class="info-grid">
+      <div><span>Faixa etária</span>${idadeStr}</div>
+      <div><span>Endereço</span>${g.endereco || "A combinar com a liderança"}</div>
+      <div><span>Líder</span>${g.lider || "—"}</div>
+      <div><span>Co-líder</span>${g.colider || "—"}</div>
+    </div>
+    <div class="contacts">
+      ${liderLink ? `<a class="btn-whats" href="${liderLink}" target="_blank" rel="noopener">Falar com ${g.lider.split(" ")[0]} no WhatsApp</a>` : ""}
+      ${coliderLink ? `<a class="btn-whats secondary" href="${coliderLink}" target="_blank" rel="noopener">Falar com ${g.colider.split(" ")[0]}</a>` : ""}
+    </div>
+  `;
+  overlay.classList.add("open");
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+}
+
+function closeModal(){
+  document.getElementById("overlay").classList.remove("open");
+}
+
+document.getElementById("overlay").addEventListener("click", (e) => {
+  if(e.target.id === "overlay") closeModal();
+});
+
+document.getElementById("search-input").addEventListener("input", (e) => {
+  state.search = e.target.value;
+  render();
+});
+document.getElementById("age-input").addEventListener("input", (e) => {
+  state.age = e.target.value === "" ? null : parseInt(e.target.value, 10);
+  render();
+});
+document.getElementById("clear-filters").addEventListener("click", () => {
+  state.dias.clear(); state.publico.clear(); state.familia.clear(); state.faixa.clear();
+  state.search = ""; state.age = null;
+  document.getElementById("search-input").value = "";
+  document.getElementById("age-input").value = "";
+  document.querySelectorAll(".chip.active").forEach(c => c.classList.remove("active","gold"));
+  render();
+});
+
+function uniqueBairros(){
+  return [...new Set(DATA.map(g => g.bairro).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+}
+
+buildChips("filter-regiao", uniqueBairros(), state.regiao);
+buildChips("filter-dia", uniqueDias(), state.dias);
+buildChips("filter-publico", PUBLICO_CATS, state.publico);
+buildChips("filter-familia", FAMILIA_CATS, state.familia);
+buildChips("filter-faixa", FAIXA_CATS, state.faixa);
+
+// ---------------- MAP ----------------
+const BOA_VISTA_CENTER = [2.8235, -60.6758];
+let map = null;
+let markerLayer = null;
+let geocodeCache = {}; // address -> {lat, lon} or null
+const mapHint = document.getElementById("map-hint");
+
+function initMap(){
+  if(typeof L === "undefined"){
+    mapHint.textContent = "Não foi possível carregar o mapa (sem conexão com a internet).";
+    return;
+  }
+  map = L.map('map', { scrollWheelZoom: false }).setView(BOA_VISTA_CENTER, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+  geocodeAllThenRender();
+}
+
+async function geocodeAddress(query){
+  if(geocodeCache.hasOwnProperty(query)) return geocodeCache[query];
+  try{
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    const json = await res.json();
+    if(json && json.length){
+      const coords = { lat: parseFloat(json[0].lat), lon: parseFloat(json[0].lon) };
+      geocodeCache[query] = coords;
+      return coords;
+    }
+  } catch(e){ /* ignore, likely offline or blocked */ }
+  geocodeCache[query] = null;
+  return null;
+}
+
+async function geocodeAllThenRender(){
+  const withAddress = DATA.filter(g => g.geoQuery);
+  const uniqueQueries = [...new Set(withAddress.map(g => g.geoQuery))];
+  let done = 0;
+  for(const q of uniqueQueries){
+    await geocodeAddress(q);
+    done++;
+    mapHint.textContent = `Localizando os grupos no mapa… (${done}/${uniqueQueries.length})`;
+    await new Promise(r => setTimeout(r, 1050)); // respeita limite de uso do Nominatim (1 req/s)
+  }
+  const withCoords = withAddress.filter(g => geocodeCache[g.geoQuery]).length;
+  if(withCoords === 0){
+    mapHint.textContent = "Não foi possível localizar os endereços no mapa no momento.";
+  } else {
+    mapHint.textContent = `${withCoords} de ${DATA.length} grupos têm endereço localizado no mapa. Os demais combinam o local diretamente com a liderança.`;
+  }
+  updateMapMarkers(filterData());
+}
+
+function updateMapMarkers(groups){
+  if(!map || !markerLayer) return;
+  markerLayer.clearLayers();
+  const bounds = [];
+  groups.forEach(g => {
+    if(!g.geoQuery) return;
+    const coords = geocodeCache[g.geoQuery];
+    if(!coords) return;
+    const marker = L.marker([coords.lat, coords.lon]);
+    const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.dia} · ${g.horaInicio}` : g.dia;
+    const popupDiv = document.createElement("div");
+    popupDiv.innerHTML = `<b>${g.nome}</b><br>${timeStr}${g.bairro ? " · " + g.bairro : ""}<br><span class="popup-link">Ver detalhes</span>`;
+    popupDiv.querySelector(".popup-link").addEventListener("click", () => openModal(g));
+    marker.bindPopup(popupDiv);
+    marker.addTo(markerLayer);
+    bounds.push([coords.lat, coords.lon]);
+  });
+  if(bounds.length){
+    map.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
+  } else {
+    map.setView(BOA_VISTA_CENTER, 12);
+  }
+}
+
+document.getElementById("toggle-map").addEventListener("click", (e) => {
+  const mapEl = document.getElementById("map");
+  const hidden = mapEl.style.display === "none";
+  mapEl.style.display = hidden ? "block" : "none";
+  mapHint.style.display = hidden ? "block" : "none";
+  e.target.textContent = hidden ? "Ocultar mapa" : "Mostrar mapa";
+  if(hidden && map){ setTimeout(() => map.invalidateSize(), 50); }
+});
+
+render();
+initMap();
+</script>
+</body>
+</html>
