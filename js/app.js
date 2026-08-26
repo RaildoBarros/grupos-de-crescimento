@@ -3,6 +3,9 @@
    ============================================================ */
 
 const CSV_PATH = "data/grupos.csv";
+const IMAGE_DIR = "images/grupos/";
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+const PLACEHOLDER_IMAGE = "images/placeholder-group.svg";
 
 let DATA = [];
 
@@ -100,6 +103,7 @@ function rowToGroup(row) {
     totalParticipantes: parseIntOrNull(row["Total de participantes"]),
     bairro: extractBairro(endereco),
     geoQuery: endereco || null,
+    imagemBase: row["ID"] ? IMAGE_DIR + String(row["ID"]).trim() : null,
   };
 }
 
@@ -206,23 +210,50 @@ function whatsLink(phone, nome) {
   return `https://wa.me/${phone}?text=${msg}`;
 }
 
+/**
+ * Tenta carregar a foto do grupo testando as extensões em IMAGE_EXTENSIONS,
+ * uma de cada vez. Se nenhuma existir, usa a ilustração placeholder.
+ */
+function attachImageFallback(imgEl, group) {
+  if (!group.imagemBase) {
+    imgEl.src = PLACEHOLDER_IMAGE;
+    return;
+  }
+  let i = 0;
+  const tryNext = () => {
+    if (i >= IMAGE_EXTENSIONS.length) {
+      imgEl.onerror = null;
+      imgEl.src = PLACEHOLDER_IMAGE;
+      return;
+    }
+    imgEl.src = `${group.imagemBase}.${IMAGE_EXTENSIONS[i]}`;
+    i++;
+  };
+  imgEl.onerror = tryNext;
+  tryNext();
+}
+
 function renderCard(g) {
   const card = document.createElement("div");
   card.className = "card";
   const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.dia} · ${g.horaInicio}` : g.dia;
   const tags = g.categorias.slice(0, 3).map(c => `<span class="tag">${c}</span>`).join("");
   card.innerHTML = `
-    <div class="card-top">
-      <h3>${g.nome}</h3>
-      <span class="day-badge">${timeStr}</span>
-    </div>
-    <div class="excerpt">${excerpt(g.descricao || "Grupo de Crescimento — entre em contato para saber mais.", 150)}</div>
-    <div class="tag-row">${tags}</div>
-    <div class="card-foot">
-      <span class="leader">${g.lider || "—"}${g.bairro ? " · " + g.bairro : ""}</span>
-      <span>Ver detalhes →</span>
+    <div class="card-img"><img alt="Foto do ${g.nome}"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <h3>${g.nome}</h3>
+        <span class="day-badge">${timeStr}</span>
+      </div>
+      <div class="excerpt">${excerpt(g.descricao || "Grupo de Crescimento — entre em contato para saber mais.", 150)}</div>
+      <div class="tag-row">${tags}</div>
+      <div class="card-foot">
+        <span class="leader">${g.lider || "—"}${g.bairro ? " · " + g.bairro : ""}</span>
+        <span>Ver detalhes →</span>
+      </div>
     </div>
   `;
+  attachImageFallback(card.querySelector(".card-img img"), g);
   card.addEventListener("click", () => openModal(g));
   return card;
 }
@@ -255,21 +286,25 @@ function openModal(g) {
 
   modal.innerHTML = `
     <button class="modal-close" id="modal-close">✕</button>
-    <h3>${g.nome}</h3>
-    <div class="meta-line">${g.dia} · ${timeStr}</div>
-    <div class="tag-row">${tags}</div>
-    <div class="desc">${g.descricao || "Entre em contato com a liderança para mais informações sobre este grupo."}</div>
-    <div class="info-grid">
-      <div><span>Faixa etária</span>${idadeStr}</div>
-      <div><span>Endereço</span>${g.endereco || "A combinar com a liderança"}</div>
-      <div><span>Líder</span>${g.lider || "—"}</div>
-      <div><span>Co-líder</span>${g.colider || "—"}</div>
-    </div>
-    <div class="contacts">
-      ${liderLink ? `<a class="btn-whats" href="${liderLink}" target="_blank" rel="noopener">Falar com ${g.lider.split(" ")[0]} no WhatsApp</a>` : ""}
-      ${coliderLink ? `<a class="btn-whats secondary" href="${coliderLink}" target="_blank" rel="noopener">Falar com ${g.colider.split(" ")[0]}</a>` : ""}
+    <div class="modal-img"><img alt="Foto do ${g.nome}"></div>
+    <div class="modal-body">
+      <h3>${g.nome}</h3>
+      <div class="meta-line">${g.dia} · ${timeStr}</div>
+      <div class="tag-row">${tags}</div>
+      <div class="desc">${g.descricao || "Entre em contato com a liderança para mais informações sobre este grupo."}</div>
+      <div class="info-grid">
+        <div><span>Faixa etária</span>${idadeStr}</div>
+        <div><span>Endereço</span>${g.endereco || "A combinar com a liderança"}</div>
+        <div><span>Líder</span>${g.lider || "—"}</div>
+        <div><span>Co-líder</span>${g.colider || "—"}</div>
+      </div>
+      <div class="contacts">
+        ${liderLink ? `<a class="btn-whats" href="${liderLink}" target="_blank" rel="noopener">Falar com ${g.lider.split(" ")[0]} no WhatsApp</a>` : ""}
+        ${coliderLink ? `<a class="btn-whats secondary" href="${coliderLink}" target="_blank" rel="noopener">Falar com ${g.colider.split(" ")[0]}</a>` : ""}
+      </div>
     </div>
   `;
+  attachImageFallback(modal.querySelector(".modal-img img"), g);
   overlay.classList.add("open");
   document.getElementById("modal-close").addEventListener("click", closeModal);
 }

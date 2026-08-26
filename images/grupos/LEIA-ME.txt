@@ -1,0 +1,23 @@
+COMO ADICIONAR FOTOS DOS GRUPOS
+================================
+
+Coloque a foto de cada grupo nesta pasta usando o ID do grupo como nome do
+arquivo. O ID é o número que aparece na primeira coluna do CSV
+(data/grupos.csv), por exemplo:
+
+  images/grupos/30233.jpg      → foto do grupo "GC TANGEDORES" (ID 30233)
+  images/grupos/30240.jpg
+  images/grupos/30255.png
+  ...
+
+Extensões aceitas, nessa ordem de tentativa: .jpg, .jpeg, .png, .webp
+A página tenta cada uma automaticamente — não precisa configurar nada além
+de salvar o arquivo com o nome certo.
+
+Se um grupo não tiver foto cadastrada, a página exibe automaticamente uma
+ilustração padrão (images/placeholder-group.svg) no lugar, então nada quebra
+enquanto as fotos não são adicionadas.
+
+Recomendações de imagem:
+- Formato paisagem (ex: 4:3 ou 16:10) funciona melhor nos cards.
+- Tamanho de arquivo leve (até ~300 KB) para carregar rápido.
