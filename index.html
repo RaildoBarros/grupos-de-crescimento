@@ -1,107 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grupos de Crescimento — Encontre o seu</title>
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
-<link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png">
-<link rel="shortcut icon" href="images/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Encontre um Grupo de Crescimento compatível com seu perfil, idade e região.">
+  <title>Grupos de Crescimento — Encontre o seu</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
-<header class="hero">
-  <div class="growth-bg">
-    <img src="images/hero-branch.svg" alt="" width="900" height="420">
-  </div>
-  <div class="hero-inner">
-    <div class="eyebrow">Grupos de Crescimento</div>
- </div>
-
-  <div class="search-card">
-    <svg class="search-icon" width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0F1F16" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="#0F1F16" stroke-width="2" stroke-linecap="round"/></svg>
-    <input type="text" id="search-input" placeholder="Buscar por nome ou palavra-chave (ex: casais, adolescentes, quinta-feira...)">
-    <div class="age-field">
-      <label for="age-input">Sua idade</label>
-      <input type="number" id="age-input" min="0" max="99" placeholder="—">
-    </div>
-  </div>
-</header>
-
-<main>
-  <div class="layout">
-    <aside class="filters">
-      <h2>Filtrar</h2>
-      <div class="sub">Combine os filtros para achar seu grupo.</div>
-      
-      <div class="filter-group">
-        <h3>Público</h3>
-        <div class="chip-row" id="filter-publico"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Estado civil / Família</h3>
-        <div class="chip-row" id="filter-familia"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Região / Bairro</h3>
-        <div class="chip-row" id="filter-regiao"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Dia da semana</h3>
-        <div class="chip-row" id="filter-dia"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Faixa etária</h3>
-        <div class="chip-row" id="filter-faixa"></div>
-      </div>
-
-      <button id="clear-filters">Limpar todos os filtros</button>
-    </aside>
-
-    <section>
-      <div class="map-panel">
-        <div class="map-panel-head">
-          <h2>Mapa dos grupos</h2>
-          <button class="toggle-map-btn" id="toggle-map">Ocultar mapa</button>
+  <header class="hero">
+    <div class="growth-bg" aria-hidden="true"><img src="images/hero-branch.svg" alt="" width="900" height="420"></div>
+    <div class="hero-inner">
+      <div class="eyebrow">Grupos de Crescimento</div>
+      <h1>Encontre um grupo para <em>caminhar com você</em></h1>
+      <p class="lead">Conte um pouco sobre você e veja primeiro os grupos mais compatíveis.</p>
+      <form class="guided-card" id="guided-form">
+        <div class="guided-step">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div><label for="age-input">Qual sua idade?</label><input type="number" id="age-input" min="0" max="99" inputmode="numeric" placeholder="Ex.: 24"></div>
         </div>
-        <div id="map"></div>
-        <div class="map-hint" id="map-hint">Localizando os grupos no mapa…</div>
+        <fieldset class="guided-step profile-step">
+          <legend><span class="step-number" aria-hidden="true">2</span> Qual seu perfil?</legend>
+          <div class="chip-row" id="guided-profile"></div>
+        </fieldset>
+        <button class="recommend-btn" type="submit">Ver melhores grupos para mim</button>
+      </form>
+      <div class="search-card">
+        <svg class="search-icon" aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <label class="sr-only" for="search-input">Buscar grupos</label>
+        <input type="search" id="search-input" placeholder="Buscar por nome, perfil, dia ou bairro">
       </div>
-
-      <div class="results-head">
-        <h2>Grupos disponíveis</h2>
-        <span id="count-label"></span>
-      </div>
-      <div class="cards" id="cards-container"></div>
-      <div class="empty-state" id="empty-state" style="display:none;">
-        <span class="sprout">🌱</span>
-        Nenhum grupo encontrado com esses filtros.<br>Tente remover algum filtro ou ajustar a busca.
-      </div>
-    </section>
-  </div>
-</main>
-
-<footer>Igreja do Nazareno • Grupos de Crescimento — encontre o seu, venha caminhar com a gente.</footer>
-
-<div class="overlay" id="overlay">
-  <div class="modal" id="modal-content"></div>
-</div>
-
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="js/app.js"></script>
+    </div>
+  </header>
+  <main>
+    <button class="mobile-filter-btn" id="mobile-filter-toggle" type="button" aria-expanded="false" aria-controls="filters-panel">Filtrar grupos</button>
+    <div class="layout">
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-head">
+          <div><p class="results-kicker" id="results-kicker">Todos os grupos</p><h2 id="results-title">Grupos disponíveis</h2></div>
+          <span id="count-label" role="status" aria-live="polite"></span>
+        </div>
+        <div class="active-filters" id="active-filters" aria-live="polite"></div>
+        <div class="cards" id="cards-container" aria-busy="true"></div>
+        <div class="empty-state" id="empty-state" hidden><span class="sprout" aria-hidden="true">🌱</span>Nenhum grupo encontrado com esses filtros.<br>Tente remover algum filtro ou ajustar a busca.</div>
+        <div class="map-panel map-collapsed">
+          <div class="map-panel-head">
+            <div><h2>Ver grupos no mapa</h2><p>Use o mapa como uma visualização alternativa.</p></div>
+            <button class="toggle-map-btn" id="toggle-map" type="button" aria-expanded="false" aria-controls="map-content">Mostrar mapa</button>
+          </div>
+          <div id="map-content" hidden><div id="map" aria-label="Mapa com a localização aproximada dos grupos"></div><div class="map-hint" id="map-hint" role="status">O mapa será carregado quando solicitado.</div></div>
+        </div>
+      </section>
+      <aside class="filters" id="filters-panel" aria-labelledby="filters-title">
+        <div class="filters-head"><div><h2 id="filters-title">Filtrar</h2><div class="sub">Selecione uma ou mais opções em cada seção.</div></div><button class="filters-close" id="filters-close" type="button" aria-label="Fechar filtros">×</button></div>
+        <div class="filter-group"><h3>Público</h3><div class="chip-row" id="filter-publico"></div></div>
+        <div class="filter-group"><h3>Estado civil / Família</h3><div class="chip-row" id="filter-familia"></div></div>
+        <div class="filter-group"><h3>Região / Bairro</h3><div class="chip-row" id="filter-regiao"></div></div>
+        <div class="filter-group"><h3>Dia da semana</h3><div class="chip-row" id="filter-dia"></div></div>
+        <div class="filter-group"><h3>Faixa etária</h3><div class="chip-row" id="filter-faixa"></div></div>
+        <button id="clear-filters" type="button">Limpar todos os filtros</button>
+      </aside>
+    </div>
+    <div class="filter-backdrop" id="filter-backdrop" hidden></div>
+  </main>
+  <footer>Igreja do Nazareno • Grupos de Crescimento — encontre o seu, venha caminhar com a gente.</footer>
+  <div class="overlay" id="overlay" hidden><div class="modal" id="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1"></div></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
 </html>
