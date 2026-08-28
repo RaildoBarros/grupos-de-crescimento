@@ -134,8 +134,15 @@
     box-shadow: var(--shadow);
     padding: 22px 20px 26px;
     position:sticky; top:20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--moss) transparent;
   }
-  @media (max-width: 860px){ .filters{ position:static; } }
+  .filters::-webkit-scrollbar{ width:7px; }
+  .filters::-webkit-scrollbar-thumb{ background: var(--moss); border-radius:8px; }
+  .filters::-webkit-scrollbar-track{ background: transparent; }
+  @media (max-width: 860px){ .filters{ position:static; max-height:none; overflow-y:visible; } }
 
   .filters h2{
     font-size:19px; margin-bottom:4px;
