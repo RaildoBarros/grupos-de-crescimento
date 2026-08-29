@@ -321,6 +321,7 @@
     padding: 18px;
     margin-bottom: 22px;
   }
+  .map-panel[hidden]{ display:none; }
   .map-panel-head{
     display:flex; justify-content:space-between; align-items:center;
     margin-bottom:12px; flex-wrap:wrap; gap:8px;
@@ -336,7 +337,17 @@
   .leaflet-popup-content b{ font-family:'Fraunces', serif; font-size:15px; }
   .popup-link{ display:inline-block; margin-top:6px; color:var(--moss-dim); font-weight:600; text-decoration:underline; cursor:pointer; }
   .toggle-map-btn{
-    background: transparent; border:1px solid var(--line); color:#5d5a4b;
-    padding:7px 12px; border-radius:8px; font-size:12.5px; cursor:pointer;
+    position:fixed; right:24px; bottom:24px; z-index:20;
+    width:48px; height:48px; padding:0;
+    display:grid; place-items:center;
+    background:var(--ink-soft); border:1px solid var(--ink-soft); color:var(--white);
+    border-radius:50%; cursor:pointer; box-shadow:var(--shadow);
   }
-  .toggle-map-btn:hover{ border-color:var(--moss); color:var(--ink); }
+  .toggle-map-btn svg{ width:22px; height:22px; }
+  .toggle-map-btn:hover{ background:var(--moss-dim); border-color:var(--moss-dim); }
+  .toggle-map-btn:focus-visible{ outline:3px solid var(--gold-soft); outline-offset:3px; }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0, 0, 0, 0); white-space:nowrap; border:0;
+  }
+  @media (max-width: 860px){ .toggle-map-btn{ right:16px; bottom:16px; } }

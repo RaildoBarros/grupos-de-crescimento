@@ -182,12 +182,14 @@ function groupCats(g) { return new Set(g.categorias); }
 function filterData() {
   const q = state.search.trim().toLowerCase();
   return DATA.filter(g => {
+    // Dentro de cada grupo de filtros, basta uma opção corresponder (OU).
+    // Grupos de filtros diferentes continuam sendo combinados entre si (E).
     if (state.dias.size && !state.dias.has(g.dia)) return false;
     if (state.regiao.size && !(g.bairro && state.regiao.has(g.bairro))) return false;
     const cats = groupCats(g);
-    for (const c of state.publico) { if (!cats.has(c)) return false; }
-    for (const c of state.familia) { if (!cats.has(c)) return false; }
-    for (const c of state.faixa) { if (!cats.has(c)) return false; }
+    if (state.publico.size && ![...state.publico].some(c => cats.has(c))) return false;
+    if (state.familia.size && ![...state.familia].some(c => cats.has(c))) return false;
+    if (state.faixa.size && ![...state.faixa].some(c => cats.has(c))) return false;
     if (!matchesAge(g, state.age)) return false;
     if (q) {
       const hay = (g.nome + " " + g.descricao + " " + g.categorias.join(" ") + " " + g.dia + " " + (g.bairro || "")).toLowerCase();
@@ -427,13 +429,18 @@ function setupUI() {
   });
 
   document.getElementById("toggle-map").addEventListener("click", (e) => {
-    const mapEl = document.getElementById("map");
-    const mapHint = document.getElementById("map-hint");
-    const hidden = mapEl.style.display === "none";
-    mapEl.style.display = hidden ? "block" : "none";
-    mapHint.style.display = hidden ? "block" : "none";
-    e.target.textContent = hidden ? "Ocultar mapa" : "Mostrar mapa";
-    if (hidden && map) { setTimeout(() => map.invalidateSize(), 50); }
+    const panel = document.getElementById("map-panel");
+    const willShow = panel.hidden;
+    panel.hidden = !willShow;
+    e.currentTarget.setAttribute("aria-expanded", String(willShow));
+    e.currentTarget.title = willShow ? "Ocultar mapa" : "Mostrar mapa";
+    e.currentTarget.querySelector(".sr-only").textContent = willShow ? "Ocultar mapa" : "Mostrar mapa";
+
+    if (willShow && !map) {
+      initMap();
+    } else if (willShow && map) {
+      setTimeout(() => map.invalidateSize(), 50);
+    }
   });
 }
 
@@ -456,7 +463,6 @@ async function main() {
 
   setupUI();
   render();
-  initMap();
 }
 
 document.addEventListener("DOMContentLoaded", main);

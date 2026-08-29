@@ -41,7 +41,7 @@
   <div class="layout">
     <aside class="filters">
       <h2>Filtrar</h2>
-      <div class="sub">Combine os filtros para achar seu grupo.</div>
+      <div class="sub">Opções da mesma seção são alternativas; entre seções, os filtros são combinados.</div>
       
       <div class="filter-group">
         <h3>Público</h3>
@@ -72,10 +72,14 @@
     </aside>
 
     <section>
-      <div class="map-panel">
+      <button class="toggle-map-btn" id="toggle-map" type="button" aria-controls="map-panel" aria-expanded="false" title="Mostrar mapa">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 3v15M15 6v15" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span class="sr-only">Mostrar mapa</span>
+      </button>
+
+      <div class="map-panel" id="map-panel" hidden>
         <div class="map-panel-head">
           <h2>Mapa dos grupos</h2>
-          <button class="toggle-map-btn" id="toggle-map">Ocultar mapa</button>
         </div>
         <div id="map"></div>
         <div class="map-hint" id="map-hint">Localizando os grupos no mapa…</div>
