@@ -324,16 +324,11 @@ function closeModal() {
   document.getElementById("overlay").classList.remove("open");
 }
 
-// ---------------- mapa (Leaflet + Nominatim) ----------------
+// ---------------- mapa (Leaflet) ----------------
 
 const BOA_VISTA_CENTER = [2.8235, -60.6758];
 let map = null;
 let markerLayer = null;
-let geocodeCache = {};
-
-function coordinatesFor(group) {
-  return group.coordinates || geocodeCache[group.geoQuery] || null;
-}
 
 function initMap() {
   const mapHint = document.getElementById("map-hint");
@@ -348,51 +343,10 @@ function initMap() {
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
   updateMapMarkers(filterData());
-  geocodeAllThenRender();
-}
-
-async function geocodeAddress(query) {
-  if (geocodeCache.hasOwnProperty(query)) return geocodeCache[query];
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    const json = await res.json();
-    if (json && json.length) {
-      const coords = { lat: parseFloat(json[0].lat), lon: parseFloat(json[0].lon) };
-      geocodeCache[query] = coords;
-      return coords;
-    }
-  } catch (e) { /* offline ou bloqueado — segue sem mapa */ }
-  geocodeCache[query] = null;
-  return null;
-}
-
-async function geocodeAllThenRender() {
-  const mapHint = document.getElementById("map-hint");
-  const withAddress = DATA.filter(g => g.geoQuery);
-  const uniqueQueries = [...new Set(withAddress.map(g => g.geoQuery))];
-  const pendingQueries = uniqueQueries.filter(query =>
-    !DATA.some(g => g.geoQuery === query && g.coordinates)
-  );
-  if (pendingQueries.length === 0) {
-    const withCoords = withAddress.filter(g => coordinatesFor(g)).length;
-    mapHint.textContent = `${withCoords} de ${DATA.length} grupos têm endereço localizado no mapa.`;
-    return;
-  }
-
-  let done = 0;
-  for (const q of pendingQueries) {
-    await geocodeAddress(q);
-    done++;
-    updateMapMarkers(filterData());
-    mapHint.textContent = `Localizando endereços restantes… (${done}/${pendingQueries.length})`;
-    if (done < pendingQueries.length) await new Promise(r => setTimeout(r, 1050));
-  }
-  const withCoords = withAddress.filter(g => coordinatesFor(g)).length;
+  const withCoords = DATA.filter(g => g.coordinates).length;
   mapHint.textContent = withCoords === 0
-    ? "Não foi possível localizar os endereços no mapa no momento."
-    : `${withCoords} de ${DATA.length} grupos têm endereço localizado no mapa. Os demais combinam o local diretamente com a liderança.`;
-  updateMapMarkers(filterData());
+    ? "Nenhum grupo possui coordenadas cadastradas no momento."
+    : `${withCoords} de ${DATA.length} grupos têm endereço cadastrado. Os demais combinam o local diretamente com a liderança.`;
 }
 
 function updateMapMarkers(groups) {
@@ -401,7 +355,7 @@ function updateMapMarkers(groups) {
   const bounds = [];
   groups.forEach(g => {
     if (!g.geoQuery) return;
-    const coords = coordinatesFor(g);
+    const coords = g.coordinates;
     if (!coords) return;
     const marker = L.marker([coords.lat, coords.lon]);
     const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.dia} · ${g.horaInicio}` : g.dia;
