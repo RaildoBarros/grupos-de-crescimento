@@ -39,6 +39,12 @@ function parseIntOrNull(raw) {
   return isNaN(n) ? null : n;
 }
 
+function parseCoordinate(raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === "") return null;
+  const value = parseFloat(String(raw).trim().replace(",", "."));
+  return Number.isFinite(value) ? value : null;
+}
+
 function cleanText(raw) {
   if (raw === undefined || raw === null) return "";
   const s = String(raw).trim();
@@ -79,6 +85,8 @@ function extractBairro(endereco) {
 
 function rowToGroup(row) {
   const endereco = cleanText(row["Endereço"]);
+  const latitude = parseCoordinate(row["Latitude"]);
+  const longitude = parseCoordinate(row["Longitude"]);
   const categorias = String(row["Categorias"] || "")
     .split("/")
     .map(c => c.trim())
@@ -103,6 +111,7 @@ function rowToGroup(row) {
     totalParticipantes: parseIntOrNull(row["Total de participantes"]),
     bairro: extractBairro(endereco),
     geoQuery: endereco || null,
+    coordinates: latitude !== null && longitude !== null ? { lat: latitude, lon: longitude } : null,
     imagemBase: row["ID"] ? IMAGE_DIR + String(row["ID"]).trim() : null,
   };
 }
@@ -322,6 +331,10 @@ let map = null;
 let markerLayer = null;
 let geocodeCache = {};
 
+function coordinatesFor(group) {
+  return group.coordinates || geocodeCache[group.geoQuery] || null;
+}
+
 function initMap() {
   const mapHint = document.getElementById("map-hint");
   if (typeof L === "undefined") {
@@ -334,6 +347,7 @@ function initMap() {
     attribution: "&copy; OpenStreetMap",
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
+  updateMapMarkers(filterData());
   geocodeAllThenRender();
 }
 
@@ -357,14 +371,24 @@ async function geocodeAllThenRender() {
   const mapHint = document.getElementById("map-hint");
   const withAddress = DATA.filter(g => g.geoQuery);
   const uniqueQueries = [...new Set(withAddress.map(g => g.geoQuery))];
+  const pendingQueries = uniqueQueries.filter(query =>
+    !DATA.some(g => g.geoQuery === query && g.coordinates)
+  );
+  if (pendingQueries.length === 0) {
+    const withCoords = withAddress.filter(g => coordinatesFor(g)).length;
+    mapHint.textContent = `${withCoords} de ${DATA.length} grupos têm endereço localizado no mapa.`;
+    return;
+  }
+
   let done = 0;
-  for (const q of uniqueQueries) {
+  for (const q of pendingQueries) {
     await geocodeAddress(q);
     done++;
-    mapHint.textContent = `Localizando os grupos no mapa… (${done}/${uniqueQueries.length})`;
-    await new Promise(r => setTimeout(r, 1050)); // respeita limite de 1 req/s do Nominatim
+    updateMapMarkers(filterData());
+    mapHint.textContent = `Localizando endereços restantes… (${done}/${pendingQueries.length})`;
+    if (done < pendingQueries.length) await new Promise(r => setTimeout(r, 1050));
   }
-  const withCoords = withAddress.filter(g => geocodeCache[g.geoQuery]).length;
+  const withCoords = withAddress.filter(g => coordinatesFor(g)).length;
   mapHint.textContent = withCoords === 0
     ? "Não foi possível localizar os endereços no mapa no momento."
     : `${withCoords} de ${DATA.length} grupos têm endereço localizado no mapa. Os demais combinam o local diretamente com a liderança.`;
@@ -377,7 +401,7 @@ function updateMapMarkers(groups) {
   const bounds = [];
   groups.forEach(g => {
     if (!g.geoQuery) return;
-    const coords = geocodeCache[g.geoQuery];
+    const coords = coordinatesFor(g);
     if (!coords) return;
     const marker = L.marker([coords.lat, coords.lon]);
     const timeStr = (g.horaInicio && g.horaInicio !== "00:00") ? `${g.dia} · ${g.horaInicio}` : g.dia;
