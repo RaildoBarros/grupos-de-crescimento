@@ -382,6 +382,20 @@ function setupUI() {
   buildChips("filter-familia", FAMILIA_CATS, state.familia);
   buildChips("filter-faixa", FAIXA_CATS, state.faixa);
 
+  const filters = document.querySelector(".filters");
+  const toggleFilters = document.getElementById("toggle-filters");
+  const mobileFilters = window.matchMedia("(max-width: 860px)");
+  const setFiltersExpanded = (expanded) => {
+    filters.classList.toggle("is-expanded", expanded);
+    toggleFilters.setAttribute("aria-expanded", String(expanded));
+    toggleFilters.querySelector(".sr-only").textContent = expanded ? "Ocultar filtros" : "Mostrar filtros";
+  };
+  // Em telas pequenas, os filtros começam fechados para priorizar os resultados.
+  setFiltersExpanded(!mobileFilters.matches);
+  toggleFilters.addEventListener("click", () => {
+    setFiltersExpanded(!filters.classList.contains("is-expanded"));
+  });
+
   document.getElementById("overlay").addEventListener("click", (e) => {
     if (e.target.id === "overlay") closeModal();
   });

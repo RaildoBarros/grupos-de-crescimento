@@ -40,7 +40,14 @@
 <main>
   <div class="layout">
     <aside class="filters">
-      <h2>Filtrar</h2>
+      <div class="filters-head">
+        <h2>Filtrar</h2>
+        <button class="toggle-filters-btn" id="toggle-filters" type="button" aria-controls="filters-content" aria-expanded="false">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="sr-only">Mostrar filtros</span>
+        </button>
+      </div>
+      <div class="filters-content" id="filters-content">
       <div class="sub">Opções da mesma seção são alternativas; entre seções, os filtros são combinados.</div>
       
       <div class="filter-group">
@@ -69,6 +76,7 @@
       </div>
 
       <button id="clear-filters">Limpar todos os filtros</button>
+      </div>
     </aside>
 
     <section>
