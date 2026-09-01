@@ -15,7 +15,7 @@ function setupTheme() {
   const applyTheme = (theme) => {
     const isDark = theme === "dark";
     document.documentElement.dataset.theme = theme;
-    document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#102019" : "#183c28");
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#000000" : "#183c28");
     toggle.setAttribute("aria-pressed", String(isDark));
     toggle.title = isDark ? "Ativar tema claro" : "Ativar tema escuro";
     toggle.setAttribute("aria-label", toggle.title);
@@ -405,7 +405,7 @@ function setupUI() {
 
   const filters = document.querySelector(".filters");
   const toggleFilters = document.getElementById("toggle-filters");
-  const mobileFilters = window.matchMedia("(max-width: 860px)");
+  const mobileFilters = window.matchMedia("(max-width: 980px)");
   const setFiltersExpanded = (expanded) => {
     filters.classList.toggle("is-expanded", expanded);
     toggleFilters.setAttribute("aria-expanded", String(expanded));
