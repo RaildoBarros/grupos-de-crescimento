@@ -1,119 +1,210 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grupos de Crescimento — Encontre o seu</title>
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
-<link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png">
-<link rel="shortcut icon" href="images/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#183c28">
+  <title>Grupos de Crescimento — Encontre o seu</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
-
-<header class="hero">
-  <div class="growth-bg">
-    <img src="images/hero-branch.svg" alt="" width="900" height="420">
-  </div>
-  <div class="hero-inner">
-    <div class="eyebrow">Grupos de Crescimento</div>
- </div>
-
-  <div class="search-card">
-    <svg class="search-icon" width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0F1F16" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="#0F1F16" stroke-width="2" stroke-linecap="round"/></svg>
-    <input type="text" id="search-input" placeholder="Buscar por nome ou palavra-chave (ex: casais, adolescentes, quinta-feira...)">
-    <div class="age-field">
-      <label for="age-input">Sua idade</label>
-      <input type="number" id="age-input" min="0" max="99" placeholder="—">
-    </div>
-  </div>
-</header>
-
-<main>
-  <div class="layout">
-    <aside class="filters">
-      <div class="filters-head">
-        <h2>Filtrar</h2>
-        <button class="toggle-filters-btn" id="toggle-filters" type="button" aria-controls="filters-content" aria-expanded="false">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="sr-only">Mostrar filtros</span>
-        </button>
-      </div>
-      <div class="filters-content" id="filters-content">
-      <div class="sub">Opções da mesma seção são alternativas; entre seções, os filtros são combinados.</div>
-      
-      <div class="filter-group">
-        <h3>Público</h3>
-        <div class="chip-row" id="filter-publico"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Estado civil / Família</h3>
-        <div class="chip-row" id="filter-familia"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Região / Bairro</h3>
-        <div class="chip-row" id="filter-regiao"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Dia da semana</h3>
-        <div class="chip-row" id="filter-dia"></div>
-      </div>
-
-      <div class="filter-group">
-        <h3>Faixa etária</h3>
-        <div class="chip-row" id="filter-faixa"></div>
-      </div>
-
-      <button id="clear-filters">Limpar todos os filtros</button>
-      </div>
-    </aside>
-
-    <section>
-      <button class="toggle-map-btn" id="toggle-map" type="button" aria-controls="map-panel" aria-expanded="false" title="Mostrar mapa">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 3v15M15 6v15" stroke="currentColor" stroke-width="1.8"/></svg>
-        <span class="sr-only">Mostrar mapa</span>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="#" aria-label="Grupos de Crescimento">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path d="M8 22.5 24 9l16 13.5V40H8V22.5Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+            <path d="M24 39V23" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M24 29c-5.4-.2-8.2-3-8.5-7.6 4.7-.3 7.8 2.4 8.5 7.6Zm0-4.5c.5-4.5 3.5-7.1 8.3-7 .2 4.6-2.6 7.2-8.3 7Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span>
+          <strong>GRUPOS DE<br>CRESCIMENTO</strong>
+          <small>GCs</small>
+        </span>
+      </a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Ativar tema escuro" aria-pressed="false" title="Ativar tema escuro">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+        <span class="theme-toggle-label">Tema escuro</span>
       </button>
+    </div>
+  </header>
 
-      <div class="map-panel" id="map-panel" hidden>
-        <div class="map-panel-head">
-          <h2>Mapa dos grupos</h2>
+  <main>
+
+    <section class="how-section" id="como-funciona">
+      <div class="how-copy">
+        <span class="kicker">COMO FUNCIONA</span>
+
+        <div class="steps">
+          <div class="step"><span>1</span><div><b>Encontre um grupo</b><p>Use a busca e os filtros para descobrir GCs perto de você.</p></div></div>
+          <div class="step"><span>2</span><div><b>Conheça a liderança</b><p>Abra os detalhes e entre em contato diretamente pelo WhatsApp.</p></div></div>
+          <div class="step"><span>3</span><div><b>Participe e cresça</b><p>Construa relacionamentos, cresça na Palavra e caminhe em missão.</p></div></div>
         </div>
-        <div id="map"></div>
-        <div class="map-hint" id="map-hint">Localizando os grupos no mapa…</div>
-      </div>
-
-      <div class="results-head">
-        <h2>Grupos disponíveis</h2>
-        <span id="count-label"></span>
-      </div>
-      <div class="cards" id="cards-container"></div>
-      <div class="empty-state" id="empty-state" style="display:none;">
-        <span class="sprout">🌱</span>
-        Nenhum grupo encontrado com esses filtros.<br>Tente remover algum filtro ou ajustar a busca.
+        <a class="primary-btn how-cta" href="#encontre">Encontrar um grupo</a>
       </div>
     </section>
+
+    <section class="find-section" id="encontre">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">ENCONTRE SEU GC</span>
+          <h2>Há um grupo esperando por você.</h2>
+          <p>Busque por nome, perfil, dia da semana ou região e encontre um grupo que combine com sua rotina.</p>
+        </div>
+        <div class="group-count">
+          <strong id="hero-count">—</strong>
+          <span>grupos ativos</span>
+        </div>
+      </div>
+
+      <div class="search-card">
+        <div class="search-main">
+          <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <label for="search-input">O que você procura?</label>
+            <input type="text" id="search-input" placeholder="Ex.: casais, adolescentes, quinta-feira, bairro...">
+          </div>
+        </div>
+
+        <div class="age-field">
+          <label for="age-input">Sua idade</label>
+          <input type="number" id="age-input" min="0" max="99" placeholder="—">
+        </div>
+      </div>
+
+      <div class="layout">
+        <aside class="filters">
+          <div class="filters-head">
+            <div>
+              <span class="filter-eyebrow">REFINE SUA BUSCA</span>
+              <h2>Filtros</h2>
+            </div>
+            <button class="toggle-filters-btn" id="toggle-filters" type="button"
+                    aria-controls="filters-content" aria-expanded="false">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="sr-only">Mostrar filtros</span>
+            </button>
+          </div>
+
+          <div class="filters-content" id="filters-content">
+            <div class="sub">Selecione uma ou mais opções. Entre seções, os filtros são combinados.</div>
+
+            <div class="filter-group">
+              <h3>Público</h3>
+              <div class="chip-row" id="filter-publico"></div>
+            </div>
+
+            <div class="filter-group">
+              <h3>Estado civil / Família</h3>
+              <div class="chip-row" id="filter-familia"></div>
+            </div>
+
+            <div class="filter-group">
+              <h3>Região / Bairro</h3>
+              <div class="chip-row" id="filter-regiao"></div>
+            </div>
+
+            <div class="filter-group">
+              <h3>Dia da semana</h3>
+              <div class="chip-row" id="filter-dia"></div>
+            </div>
+
+            <div class="filter-group">
+              <h3>Faixa etária</h3>
+              <div class="chip-row" id="filter-faixa"></div>
+            </div>
+
+            <button id="clear-filters">Limpar todos os filtros</button>
+          </div>
+        </aside>
+
+        <section class="results-section">
+          <div class="results-toolbar">
+            <div class="results-head">
+              <span class="filter-eyebrow">RESULTADOS</span>
+              <div class="results-title-line">
+                <h2>Grupos disponíveis</h2>
+                <span id="count-label"></span>
+              </div>
+            </div>
+
+            <button class="toggle-map-btn" id="toggle-map" type="button"
+                    aria-controls="map-panel" aria-expanded="false" title="Mostrar mapa">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"
+                      stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M9 3v15M15 6v15" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <span class="map-button-label">Ver no mapa</span>
+              <span class="sr-only">Mostrar mapa</span>
+            </button>
+          </div>
+
+          <div class="map-panel" id="map-panel" hidden>
+            <div class="map-panel-head">
+              <div>
+                <span class="filter-eyebrow">LOCALIZAÇÃO</span>
+                <h2>Mapa dos grupos</h2>
+              </div>
+            </div>
+            <div id="map"></div>
+            <div class="map-hint" id="map-hint">Localizando os grupos no mapa…</div>
+          </div>
+
+          <div class="cards" id="cards-container"></div>
+
+          <div class="empty-state" id="empty-state" style="display:none;">
+            <span class="sprout">🌱</span>
+            <h3>Nenhum grupo encontrado</h3>
+            <p>Tente remover algum filtro ou ajustar sua busca.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand footer-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path d="M8 22.5 24 9l16 13.5V40H8V22.5Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+            <path d="M24 39V23" stroke="currentColor" stroke-width="2.4"/>
+            <path d="M24 29c-5.4-.2-8.2-3-8.5-7.6 4.7-.3 7.8 2.4 8.5 7.6Zm0-4.5c.5-4.5 3.5-7.1 8.3-7 .2 4.6-2.6 7.2-8.3 7Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span><strong>GRUPOS DE<br>CRESCIMENTO</strong><small>GCs</small></span>
+      </div>
+      <p>Igreja do Nazareno • Grupos de Crescimento</p>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay">
+    <div class="modal" id="modal-content"></div>
   </div>
-</main>
 
-<footer>Igreja do Nazareno • Grupos de Crescimento — encontre o seu, venha caminhar com a gente.</footer>
-
-<div class="overlay" id="overlay">
-  <div class="modal" id="modal-content"></div>
-</div>
-
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="js/app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
 </html>

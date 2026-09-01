@@ -9,6 +9,27 @@ const PLACEHOLDER_IMAGE = "images/placeholder-group.svg";
 
 let DATA = [];
 
+function setupTheme() {
+  const toggle = document.getElementById("theme-toggle");
+  const savedTheme = localStorage.getItem("theme");
+  const applyTheme = (theme) => {
+    const isDark = theme === "dark";
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#102019" : "#183c28");
+    toggle.setAttribute("aria-pressed", String(isDark));
+    toggle.title = isDark ? "Ativar tema claro" : "Ativar tema escuro";
+    toggle.setAttribute("aria-label", toggle.title);
+    toggle.querySelector(".theme-toggle-label").textContent = isDark ? "Tema claro" : "Tema escuro";
+  };
+
+  applyTheme(savedTheme === "dark" ? "dark" : "light");
+  toggle.addEventListener("click", () => {
+    const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", theme);
+    applyTheme(theme);
+  });
+}
+
 // ---------------- CSV → objetos de grupo ----------------
 
 function stripHtml(raw) {
@@ -437,6 +458,7 @@ function setupUI() {
 }
 
 async function main() {
+  setupTheme();
   const container = document.getElementById("cards-container");
   container.innerHTML = `<div class="loading-msg">Carregando grupos…</div>`;
   try {
